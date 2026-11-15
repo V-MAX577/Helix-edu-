@@ -99,8 +99,9 @@ export async function getDeviceRecord<T extends DeviceRecord>(
 ): Promise<T | undefined> {
   const db = await openDeviceDatabase();
   const tx = db.transaction(storeName, "readonly");
+  const done = transactionDone(tx);
   const result = await requestResult(tx.objectStore(storeName).get(id)) as T | undefined;
-  await transactionDone(tx);
+  await done;
   return result;
 }
 
@@ -109,8 +110,9 @@ export async function getAllDeviceRecords<T extends DeviceRecord>(
 ): Promise<T[]> {
   const db = await openDeviceDatabase();
   const tx = db.transaction(storeName, "readonly");
+  const done = transactionDone(tx);
   const result = await requestResult(tx.objectStore(storeName).getAll()) as T[];
-  await transactionDone(tx);
+  await done;
   return result;
 }
 
@@ -120,8 +122,9 @@ export async function putDeviceRecord<T extends DeviceRecord>(
 ): Promise<void> {
   const db = await openDeviceDatabase();
   const tx = db.transaction(storeName, "readwrite");
+  const done = transactionDone(tx);
   tx.objectStore(storeName).put(record);
-  await transactionDone(tx);
+  await done;
 }
 
 export async function deleteDeviceRecord(
@@ -130,8 +133,9 @@ export async function deleteDeviceRecord(
 ): Promise<void> {
   const db = await openDeviceDatabase();
   const tx = db.transaction(storeName, "readwrite");
+  const done = transactionDone(tx);
   tx.objectStore(storeName).delete(id);
-  await transactionDone(tx);
+  await done;
 }
 
 export type DeviceBackup = {
@@ -174,10 +178,11 @@ export async function importDeviceData(input: unknown): Promise<void> {
 
   const db = await openDeviceDatabase();
   const tx = db.transaction([...DEVICE_STORES], "readwrite");
+  const done = transactionDone(tx);
   for (const storeName of DEVICE_STORES) {
     const store = tx.objectStore(storeName);
     store.clear();
     for (const record of backup.stores[storeName] ?? []) store.put(record);
   }
-  await transactionDone(tx);
+  await done;
 }
