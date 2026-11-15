@@ -63,6 +63,7 @@ test("health endpoint does not require a database", async ({ request }) => {
 test("bookmarks, achievements and study plans are device-local", async ({ page }) => {
   await page.goto("/demo?tab=learn");
   await page.getByRole("button", { name: "Save lesson" }).click();
+  await expect(page.getByRole("button", { name: "🔖 Saved" }).last()).toBeVisible();
   await page.getByRole("navigation", { name: "HELIXEDU sections" }).getByRole("button", { name: /Saved/ }).click();
   await expect(page.getByRole("heading", { name: "Saved lessons" })).toBeVisible();
   await expect(page.getByText("Understanding and Operating on Fractions")).toBeVisible();
@@ -77,6 +78,7 @@ test("bookmarks, achievements and study plans are device-local", async ({ page }
   const task = page.getByRole("checkbox", { name: "Complete one lesson" });
   await expect(task).toBeVisible();
   await task.check();
+  await expect(page.getByText("Plan task saved on this device.")).toBeVisible();
   await page.reload();
   await expect(page.getByRole("checkbox", { name: "Complete one lesson" })).toBeChecked();
 });
