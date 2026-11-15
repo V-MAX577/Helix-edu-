@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { chatMessages, chatSessions, profiles } from "@/db/schema";
 import { getLearner } from "@/lib/learner";
@@ -36,13 +36,13 @@ export async function POST(request: NextRequest) {
   const profile = await db.select().from(profiles).where(eq(profiles.userId, user.id)).limit(1);
   const p = profile[0];
 
-  /* Resolve or create the chat session */
+  /* Resolve only chat sessions owned by this learner. */
   let sessionId = body.sessionId;
   if (sessionId) {
     const owned = await db
       .select({ id: chatSessions.id })
       .from(chatSessions)
-      .where(eq(chatSessions.id, sessionId))
+      .where(and(eq(chatSessions.id, sessionId), eq(chatSessions.userId, user.id)))
       .limit(1);
     if (!owned.length) sessionId = undefined;
   }
@@ -121,7 +121,10 @@ export async function POST(request: NextRequest) {
     content: replyText,
     provider: providerId,
   });
-  await db.update(chatSessions).set({ mode, updatedAt: new Date() }).where(eq(chatSessions.id, sessionId));
+  await db
+    .update(chatSessions)
+    .set({ mode, updatedAt: new Date() })
+    .where(and(eq(chatSessions.id, sessionId), eq(chatSessions.userId, user.id)));
 
   return NextResponse.json({
     reply: replyText,
