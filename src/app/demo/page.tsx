@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const subjects = [
   { icon: "📐", name: "Mathematics", detail: "Fractions, algebra and geometry", lessons: 12 },
@@ -22,6 +22,40 @@ export default function DemoPage() {
   const [answer, setAnswer] = useState<number | null>(null);
   const [showCard, setShowCard] = useState(false);
   const [done, setDone] = useState(false);
+  const [storageReady, setStorageReady] = useState(false);
+
+  // Restore this learner's demo progress from this browser on this device.
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("helixedu_demo_progress_v1");
+      if (saved) {
+        const data = JSON.parse(saved) as { tab?: string; answer?: number | null; showCard?: boolean; done?: boolean };
+        if (["overview", "lessons", "quiz", "flashcards"].includes(data.tab ?? "")) setTab(data.tab!);
+        if (data.answer === null || (typeof data.answer === "number" && data.answer >= 0 && data.answer < question.options.length)) setAnswer(data.answer);
+        if (typeof data.showCard === "boolean") setShowCard(data.showCard);
+        if (typeof data.done === "boolean") setDone(data.done);
+      }
+    } catch {
+      // Ignore invalid or unavailable browser storage and keep the demo usable.
+    }
+    setStorageReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!storageReady) return;
+    try {
+      localStorage.setItem("helixedu_demo_progress_v1", JSON.stringify({ tab, answer, showCard, done }));
+    } catch {
+      // Private browsing or a full device may block storage; the current session still works.
+    }
+  }, [storageReady, tab, answer, showCard, done]);
+
+  function resetDeviceProgress() {
+    setTab("overview");
+    setAnswer(null);
+    setShowCard(false);
+    setDone(false);
+  }
 
   return (
     <main className="min-h-dvh">
@@ -37,6 +71,7 @@ export default function DemoPage() {
             <p className="chip chip-accent">🚀 YOUR LEARNING UNIVERSE</p>
             <h1 className="mt-4 text-3xl font-extrabold sm:text-4xl">Welcome, Explorer.</h1>
             <p className="mt-2 max-w-2xl text-sm text-[var(--text-muted)]">This is a working HELIXEDU preview. Explore sample lessons, try a quiz and flip a flashcard. No account, database or AI key required.</p>
+            <p className="mt-3 text-xs text-[var(--text-muted)]">Your demo progress is saved in this browser on this device. It is not uploaded or synced.</p>
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[["8","Subjects"],["43","Sample lessons"],["6","Quiz questions"],["100%","Demo access"]].map(([value,label]) => (
                 <div className="rounded-xl border border-[var(--panel-border)] bg-[color-mix(in_srgb,var(--panel)_75%,transparent)] p-3" key={label}>
@@ -113,7 +148,7 @@ export default function DemoPage() {
               <span className="text-xs tracking-widest text-[var(--text-muted)]">{showCard ? "ANSWER" : "QUESTION"} · TAP TO FLIP</span>
               <span className="mt-4 text-xl font-bold">{showCard ? "1 (four quarters make a whole)." : "What is 3/4 + 1/4?"}</span>
             </button>
-            <p className="mt-3 text-xs text-[var(--text-muted)]">This is a temporary demo interaction. Your response is not stored.</p>
+            <p className="mt-3 text-xs text-[var(--text-muted)]">Your flashcard state is saved locally in this browser.</p>
           </section>
         )}
 
