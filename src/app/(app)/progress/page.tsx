@@ -23,7 +23,7 @@ export default async function ProgressPage() {
       .where(eq(studyLog.userId, user.id))
       .orderBy(desc(studyLog.day))
       .limit(14),
-    db.select({ today: sql<string>`current_date::text` }),
+    db.select({ today: sql<string>`current_date::text` }).from(profiles).limit(1),
   ]);
 
   const today = todayResult[0]?.today ?? recentLog[0]?.day ?? "1970-01-01";
