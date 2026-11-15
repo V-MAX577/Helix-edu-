@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { deleteDeviceRecord, getAllDeviceRecords, getDeviceRecord, putDeviceRecord } from "@/lib/device-store";
 
 type Bookmark = {
+  [key: string]: unknown;
   id: string;
   targetType: string;
   targetId: string;
