@@ -11,7 +11,7 @@ const LEGACY_TABS: Record<string, string> = {
   "/notes": "notes",
   "/planner": "planner",
   "/reminders": "planner",
-  "/bookmarks": "learn",
+  "/bookmarks": "bookmarks",
   "/search": "learn",
   "/settings": "settings",
 };
