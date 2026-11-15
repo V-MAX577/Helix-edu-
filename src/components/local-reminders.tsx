@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { deleteDeviceRecord, getAllDeviceRecords, putDeviceRecord } from "@/lib/device-store";
 
 type Reminder = {
@@ -53,7 +53,7 @@ export function LocalReminderPanel() {
     return () => window.clearInterval(timer);
   }, [items, permission]);
 
-  async function addReminder(event: React.FormEvent) {
+  async function addReminder(event: FormEvent) {
     event.preventDefault();
     const item: Reminder = {
       id: "reminder-" + crypto.randomUUID(),
