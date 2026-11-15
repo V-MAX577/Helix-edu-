@@ -74,7 +74,7 @@ export default async function LandingPage() {
             <Wordmark />
           </Link>
           <div className="flex items-center gap-2">
-            <Link href="/search" className="btn btn-ghost btn-sm hidden sm:inline-flex">
+            <Link href="/demo" className="btn btn-ghost btn-sm hidden sm:inline-flex">
               🔍 Search lessons
             </Link>
             <Link href="/demo" className="btn btn-primary btn-sm">
@@ -149,7 +149,7 @@ export default async function LandingPage() {
             {rows.map((subject) => (
               <Link
                 key={subject.id}
-                href={`/learn/${subject.slug}`}
+                href="/demo"
                 className="panel group flex items-center gap-3.5 p-4 transition hover:-translate-y-0.5"
               >
                 <span
@@ -291,7 +291,7 @@ export default async function LandingPage() {
             <Link href="/demo" className="btn btn-primary px-7 py-3 text-base">
               Enter HELIXEDU
             </Link>
-            <Link href="/learn" className="btn btn-ghost px-7 py-3 text-base">
+            <Link href="/demo" className="btn btn-ghost px-7 py-3 text-base">
               Browse lessons
             </Link>
           </div>
@@ -308,13 +308,13 @@ export default async function LandingPage() {
             Unlock Your Mind. Explore Infinity. — Built for students on every device.
           </p>
           <div className="flex gap-4 text-xs">
-            <Link href="/learn" className="hover:text-[var(--text)]">
+            <Link href="/demo" className="hover:text-[var(--text)]">
               Learn
             </Link>
-            <Link href="/assistant" className="hover:text-[var(--text)]">
+            <Link href="/demo" className="hover:text-[var(--text)]">
               Assistant
             </Link>
-            <Link href="/settings" className="hover:text-[var(--text)]">
+            <Link href="/demo" className="hover:text-[var(--text)]">
               AI providers
             </Link>
           </div>
