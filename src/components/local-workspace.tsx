@@ -25,8 +25,9 @@ import { getAllDeviceRecords, putDeviceRecord } from "@/lib/device-store";
 import { DeviceBackupControls } from "./device-backup-controls";
 import { LocalBookmarkButton, LocalBookmarksPanel } from "./local-bookmarks";
 import { LocalAchievementsPanel } from "./local-achievements";
+import { LocalReminderPanel } from "./local-reminders";
 
-type Tab = "overview" | "learn" | "quiz" | "cards" | "notes" | "bookmarks" | "assistant" | "planner" | "settings";
+type Tab = "overview" | "learn" | "quiz" | "cards" | "notes" | "bookmarks" | "assistant" | "planner" | "reminders" | "settings";
 type Stats = Awaited<ReturnType<typeof getLearnerStats>>;
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
@@ -38,6 +39,7 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: "bookmarks", label: "Saved", icon: "🔖" },
   { id: "assistant", label: "AI Tutor", icon: "🧠" },
   { id: "planner", label: "Planner", icon: "🗓️" },
+  { id: "reminders", label: "Reminders", icon: "⏰" },
   { id: "settings", label: "Settings", icon: "⚙️" },
 ];
 
@@ -333,6 +335,8 @@ export function LocalLearningWorkspace() {
         </Panel>}
 
         {tab === "planner" && <Panel><h2 className="text-xl font-bold">🗓️ Study planner</h2><p className="mt-2 text-sm text-[var(--text-muted)]">Create a simple daily target. The plan is stored locally and stays on this device.</p><form className="mt-4 grid gap-3 sm:max-w-md" onSubmit={createStudyPlan}><input className="field" value={planTitle} onChange={(event) => setPlanTitle(event.target.value)} aria-label="Plan title" /><label className="grid gap-1 text-sm">Minutes per day<input className="field" type="number" min={10} max={240} value={planMinutes} onChange={(event) => setPlanMinutes(Number(event.target.value))} /></label><button type="submit" className="btn btn-primary btn-sm">Save study plan</button></form>{planMessage && <p role="status" className="mt-3 text-sm text-emerald-300">{planMessage}</p>}</Panel>}
+
+        {tab === "reminders" && <LocalReminderPanel />}
 
         {tab === "settings" && <section className="grid gap-4 lg:grid-cols-2">
           <Panel><h2 className="text-xl font-bold">⚙️ Learning preferences</h2>{settings && <form className="mt-4 grid gap-3" onSubmit={saveProfile}><label className="grid gap-1 text-sm">Display name<input className="field" value={settings.name} onChange={(event) => setSettings({ ...settings, name: event.target.value })} /></label><label className="grid gap-1 text-sm">Board<select className="field" value={settings.board} onChange={(event) => setSettings({ ...settings, board: event.target.value })}><option>Maharashtra State Board</option><option>CBSE</option><option>ICSE</option><option>IB / Cambridge</option></select></label><label className="grid gap-1 text-sm">Class<select className="field" value={settings.className} onChange={(event) => setSettings({ ...settings, className: event.target.value })}>{Array.from({ length: 12 }, (_, index) => `Class ${index + 1}`).map((item) => <option key={item}>{item}</option>)}</select></label><label className="grid gap-1 text-sm">Learning level<select className="field" value={settings.level} onChange={(event) => setSettings({ ...settings, level: event.target.value as LearnerSettings["level"] })}><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select></label><label className="grid gap-1 text-sm">Daily goal (minutes)<input className="field" type="number" min={10} max={240} value={settings.dailyGoalMinutes} onChange={(event) => setSettings({ ...settings, dailyGoalMinutes: Number(event.target.value) })} /></label><button type="submit" className="btn btn-primary btn-sm">Save preferences</button></form>}</Panel>
