@@ -59,3 +59,34 @@ test("health endpoint does not require a database", async ({ request }) => {
   expect(response.ok()).toBeTruthy();
   await expect(response.json()).resolves.toMatchObject({ ok: true, storage: "device-only" });
 });
+
+test("bookmarks, achievements and study plans are device-local", async ({ page }) => {
+  await page.goto("/demo?tab=learn");
+  await page.getByRole("button", { name: "Save lesson" }).click();
+  await page.getByRole("button", { name: /Saved/ }).click();
+  await expect(page.getByRole("heading", { name: "Saved lessons" })).toBeVisible();
+  await expect(page.getByText("Understanding and Operating on Fractions")).toBeVisible();
+
+  await page.goto("/demo?tab=overview");
+  await expect(page.getByRole("heading", { name: "Achievements" })).toBeVisible();
+
+  await page.goto("/demo?tab=planner");
+  const title = page.getByRole("textbox").first();
+  await title.fill("Offline revision plan");
+  await page.getByRole("button", { name: "Save study plan" }).click();
+  const task = page.getByRole("checkbox", { name: "Complete one lesson" });
+  await expect(task).toBeVisible();
+  await task.check();
+  await page.reload();
+  await expect(page.getByRole("checkbox", { name: "Complete one lesson" })).toBeChecked();
+});
+
+test("study reminders persist on this device", async ({ page }) => {
+  await page.goto("/demo?tab=reminders");
+  await page.getByLabel("Reminder label").fill("Read science");
+  await page.getByLabel("Reminder time").fill("19:15");
+  await page.getByRole("button", { name: "Add reminder" }).click();
+  await expect(page.getByText("Read science")).toBeVisible();
+  await page.reload();
+  await expect(page.getByText("Read science")).toBeVisible();
+});
