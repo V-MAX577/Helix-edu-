@@ -8,7 +8,7 @@ A free, installable learning workspace designed to run on phones and work offlin
 - Learner records are not sent to a HELIXEDU database and are not synced between devices.
 - Curriculum and the Helix Offline Engine are bundled with the app.
 - No database server, database URL, API key or payment method is required for the local learning experience.
-- An optional stateless assistant API exists for deployments that deliberately configure an external provider. The device-only workspace does not call it.
+- The study assistant runs the built-in Helix Engine in the browser. There is no external AI API integration or API-key requirement.
 
 ## Backups
 
