@@ -23,8 +23,9 @@ import {
 } from "@/lib/learner-data";
 import { getAllDeviceRecords, putDeviceRecord } from "@/lib/device-store";
 import { DeviceBackupControls } from "./device-backup-controls";
+import { LocalBookmarkButton, LocalBookmarksPanel } from "./local-bookmarks";
 
-type Tab = "overview" | "learn" | "quiz" | "cards" | "notes" | "assistant" | "planner" | "settings";
+type Tab = "overview" | "learn" | "quiz" | "cards" | "notes" | "bookmarks" | "assistant" | "planner" | "settings";
 type Stats = Awaited<ReturnType<typeof getLearnerStats>>;
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
@@ -33,6 +34,7 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: "quiz", label: "Quiz", icon: "📝" },
   { id: "cards", label: "Cards", icon: "🃏" },
   { id: "notes", label: "Notes", icon: "📒" },
+  { id: "bookmarks", label: "Saved", icon: "🔖" },
   { id: "assistant", label: "AI Tutor", icon: "🧠" },
   { id: "planner", label: "Planner", icon: "🗓️" },
   { id: "settings", label: "Settings", icon: "⚙️" },
@@ -283,7 +285,7 @@ export function LocalLearningWorkspace() {
             <p className="text-xs text-[var(--text-muted)]">{completedIds.length} lessons completed</p>
           </Panel>
           <Panel>
-            {lesson ? <><p className="text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">{subject?.name} · {chapter?.title} · {lesson.minutes} min</p><h2 className="mt-2 text-2xl font-extrabold">{lesson.title}</h2><div className="mt-5 space-y-4">{lesson.blocks.map((block, index) => <Block block={block} key={index} />)}</div><button type="button" onClick={() => void markLessonComplete()} className="btn btn-primary btn-sm mt-6">{completedIds.includes(lesson.slug) ? "Mark complete again" : "✓ Mark lesson complete"}</button></> : <p>No lesson content in this chapter yet.</p>}
+            {lesson ? <><p className="text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">{subject?.name} · {chapter?.title} · {lesson.minutes} min</p><h2 className="mt-2 text-2xl font-extrabold">{lesson.title}</h2><div className="mt-5 space-y-4">{lesson.blocks.map((block, index) => <Block block={block} key={index} />)}</div><div className="mt-6 flex flex-wrap gap-2"><button type="button" onClick={() => void markLessonComplete()} className="btn btn-primary btn-sm">{completedIds.includes(lesson.slug) ? "Mark complete again" : "✓ Mark lesson complete"}</button><LocalBookmarkButton targetId={lesson.slug} title={lesson.title} subtitle={(subject?.name ?? "") + " · " + (chapter?.title ?? "")} href={"/demo?tab=learn&subject=" + subjectSlug + "&chapter=" + chapterSlug + "&lesson=" + lesson.slug} /></div></> : <p>No lesson content in this chapter yet.</p>}
           </Panel>
         </section>}
 
@@ -302,6 +304,8 @@ export function LocalLearningWorkspace() {
           <Panel><h2 className="text-xl font-bold">📒 Create a note</h2><form className="mt-4 grid gap-3" onSubmit={saveNote}><input className="field" placeholder="Note title" value={noteTitle} onChange={(event) => setNoteTitle(event.target.value)} /><textarea className="field min-h-40" placeholder="Write your study notes…" value={noteBody} onChange={(event) => setNoteBody(event.target.value)} required /><button className="btn btn-primary btn-sm" type="submit">Save note on device</button></form></Panel>
           <Panel><h2 className="text-xl font-bold">Your notes ({notes.length})</h2><div className="mt-4 grid gap-2">{notes.map((note) => <article key={note.id} className="rounded-xl border border-[var(--panel-border)] p-3"><div className="flex items-start justify-between gap-2"><h3 className="font-semibold">{note.title}</h3><button type="button" className="text-xs text-rose-300" onClick={async () => { await deleteLocalNote(note.id); await refreshProgress(); }}>Delete</button></div><p className="mt-2 whitespace-pre-wrap text-sm text-[var(--text-muted)]">{note.body}</p></article>)}{!notes.length && <p className="text-sm text-[var(--text-muted)]">No notes saved yet.</p>}</div></Panel>
         </section>}
+
+        {tab === "bookmarks" && <LocalBookmarksPanel />}
 
         {tab === "assistant" && <Panel>
           <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="chip chip-accent">NO API KEY · NO SERVER CHAT STORAGE</p><h2 className="mt-3 text-2xl font-bold">Helix Offline Engine</h2></div><span className="text-xs text-emerald-300">Runs in this browser</span></div>
