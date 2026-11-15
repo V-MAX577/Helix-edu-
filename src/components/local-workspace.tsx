@@ -24,6 +24,7 @@ import {
 import { getAllDeviceRecords, putDeviceRecord } from "@/lib/device-store";
 import { DeviceBackupControls } from "./device-backup-controls";
 import { LocalBookmarkButton, LocalBookmarksPanel } from "./local-bookmarks";
+import { LocalAchievementsPanel } from "./local-achievements";
 
 type Tab = "overview" | "learn" | "quiz" | "cards" | "notes" | "bookmarks" | "assistant" | "planner" | "settings";
 type Stats = Awaited<ReturnType<typeof getLearnerStats>>;
@@ -288,6 +289,7 @@ export function LocalLearningWorkspace() {
             <p className="mt-4 text-sm text-[var(--text-muted)]">Daily goal: {stats?.todayMinutes ?? 0}/{settings?.dailyGoalMinutes ?? 30} minutes</p>
             <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--panel-border)]"><div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-400" style={{ width: `${Math.min(100, ((stats?.todayMinutes ?? 0) / (settings?.dailyGoalMinutes ?? 30)) * 100)}%` }} /></div>
           </Panel>
+          <LocalAchievementsPanel stats={stats} streak={streak} completedIds={completedIds} />
         </section>}
 
         {tab === "learn" && <section className="grid gap-4 lg:grid-cols-[18rem_1fr]">
