@@ -120,8 +120,22 @@ export function LocalLearningWorkspace() {
           getLocalChatMessages("local-assistant"),
         ]);
         if (cancelled) return;
-        const requestedTab = new URLSearchParams(window.location.search).get("tab");
+        const params = new URLSearchParams(window.location.search);
+        const requestedTab = params.get("tab");
         if (TABS.some((item) => item.id === requestedTab)) setTab(requestedTab as Tab);
+        const requestedSubject = params.get("subject");
+        const requestedChapter = params.get("chapter");
+        const requestedLesson = params.get("lesson");
+        const selectedSubject = CURRICULUM.find((item) => item.slug === requestedSubject);
+        if (selectedSubject) {
+          setSubjectSlug(selectedSubject.slug);
+          const selectedChapter = selectedSubject.chapters.find((item) => item.slug === requestedChapter) ?? selectedSubject.chapters[0];
+          if (selectedChapter) {
+            setChapterSlug(selectedChapter.slug);
+            const selectedLesson = selectedChapter.lessons.find((item) => item.slug === requestedLesson) ?? selectedChapter.lessons[0];
+            if (selectedLesson) setLessonSlug(selectedLesson.slug);
+          }
+        }
         setSettings(profile);
         setMessages(savedMessages);
         await refreshProgress();
