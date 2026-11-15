@@ -1,14 +1,17 @@
 {
   "name": "HELIXEDU — Unlock Your Mind. Explore Infinity.",
   "short_name": "HELIXEDU",
-  "description": "A free AI-powered learning platform: lessons, quizzes, flashcards, a step-by-step maths solver and a study planner.",
-  "start_url": "/dashboard",
+  "description": "A free device-only learning workspace with offline lessons, quizzes, flashcards, notes and a built-in study assistant.",
+  "start_url": "/demo",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#05030f",
   "theme_color": "#05030f",
-  "categories": ["education", "productivity"],
+  "categories": [
+    "education",
+    "productivity"
+  ],
   "lang": "en",
   "icons": [
     {
@@ -25,9 +28,21 @@
     }
   ],
   "shortcuts": [
-    { "name": "AI Assistant", "url": "/assistant" },
-    { "name": "Learning Centre", "url": "/learn" },
-    { "name": "Quizzes", "url": "/quizzes" },
-    { "name": "Flashcards", "url": "/flashcards" }
+    {
+      "name": "AI Tutor",
+      "url": "/demo?tab=assistant"
+    },
+    {
+      "name": "Learning Centre",
+      "url": "/demo?tab=learn"
+    },
+    {
+      "name": "Quizzes",
+      "url": "/demo?tab=quiz"
+    },
+    {
+      "name": "Flashcards",
+      "url": "/demo?tab=cards"
+    }
   ]
 }
