@@ -33,3 +33,18 @@ test("assistant page opens without a provider configured", async ({ page }) => {
   await expect(page.locator("body")).not.toContainText("Application error");
   await expect(page.locator("body")).not.toContainText("Internal Server Error");
 });
+
+
+test("demo progress persists in IndexedDB and backup can be exported", async ({ page }) => {
+  await page.goto("/demo");
+  const task = page.getByRole("checkbox", { name: "Revise fractions for 10 minutes" });
+  await expect(task).toBeVisible();
+  await task.check();
+  await page.reload();
+  await expect(page.getByRole("checkbox", { name: "Revise fractions for 10 minutes" })).toBeChecked();
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export backup" }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toMatch(/^helixedu-device-backup-.*\.json$/);
+});
