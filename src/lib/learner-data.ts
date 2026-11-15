@@ -185,7 +185,13 @@ export async function toggleLocalNotePin(id: string) {
   await putDeviceRecord("notes", { ...note, pinned: !note.pinned, updatedAt: new Date().toISOString() });
 }
 
-export async function toggleLocalBookmark(input: Omit<LocalBookmark, "id" | "createdAt">) {
+export async function toggleLocalBookmark(input: {
+  targetType: string;
+  targetId: string;
+  title: string;
+  href: string;
+  subtitle: string;
+}) {
   const rows = await getAllDeviceRecords<LocalBookmark>("bookmarks");
   const existing = rows.find((row) => row.targetType === input.targetType && row.targetId === input.targetId);
   if (existing) {
