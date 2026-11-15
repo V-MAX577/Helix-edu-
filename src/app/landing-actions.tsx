@@ -15,6 +15,8 @@ export function LandingActions() {
 
   useEffect(() => {
     const saved = localStorage.getItem("helixedu_theme");
+    // Browser storage is only available after hydration.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (saved === "light" || saved === "cosmos") setTheme(saved);
   }, []);
 

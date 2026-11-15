@@ -28,10 +28,16 @@ export function PlanClient({ plan, todayIndex }: { plan: StudyPlan; todayIndex: 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(storageKey);
-      if (raw) setDone(JSON.parse(raw));
+      if (raw) {
+        // Restore this device saved checklist after hydration.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setDone(JSON.parse(raw));
+      }
     } catch {
       /* ignore */
     }
+    // Mark local storage hydration complete after the browser read.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoaded(true);
   });
 

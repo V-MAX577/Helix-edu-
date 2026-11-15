@@ -62,12 +62,6 @@ export function FlashcardsClient({
 
   const card = queue[Math.min(index, Math.max(0, queue.length - 1))];
 
-  useEffect(() => {
-    setIndex(0);
-    setFlipped(false);
-    setHintShown(false);
-  }, [subject, onlyDue]);
-
   async function grade(correct: boolean) {
     if (!card || busy) return;
     setBusy(true);
@@ -133,7 +127,7 @@ export function FlashcardsClient({
       <Panel className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          onClick={() => setSubject("all")}
+          onClick={() => { setSubject("all"); setIndex(0); setFlipped(false); setHintShown(false); }}
           className="chip"
           style={subject === "all" ? { borderColor: "var(--accent)", background: "color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--text)" } : undefined}
         >
@@ -143,7 +137,7 @@ export function FlashcardsClient({
           <button
             key={slug}
             type="button"
-            onClick={() => setSubject(slug)}
+            onClick={() => { setSubject(slug); setIndex(0); setFlipped(false); setHintShown(false); }}
             className="chip"
             style={subject === slug ? { borderColor: "var(--accent)", background: "color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--text)" } : undefined}
           >
@@ -152,7 +146,7 @@ export function FlashcardsClient({
         ))}
         <button
           type="button"
-          onClick={() => setOnlyDue((v) => !v)}
+          onClick={() => { setOnlyDue((v) => !v); setIndex(0); setFlipped(false); setHintShown(false); }}
           className="chip ml-auto"
           style={onlyDue ? { borderColor: "var(--accent-3)", background: "rgba(16,185,129,0.16)", color: "#6ee7b7" } : undefined}
         >

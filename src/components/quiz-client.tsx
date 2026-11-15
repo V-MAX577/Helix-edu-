@@ -85,8 +85,8 @@ export function QuizTaker({
   useEffect(() => {
     if (result) return;
     if (secondsLeft <= 0) {
-      void submit();
-      return;
+      const submitTimer = setTimeout(() => void submit(), 0);
+      return () => clearTimeout(submitTimer);
     }
     const timer = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
     return () => clearTimeout(timer);

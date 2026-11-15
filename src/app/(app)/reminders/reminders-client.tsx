@@ -41,9 +41,13 @@ export function RemindersClient({
 
   useEffect(() => {
     if (typeof window === "undefined" || !("Notification" in window)) {
+      // Browser capability is only known after hydration; sync it after mount.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPermission("unsupported");
       return;
     }
+    // Browser permission is external state and must be read after hydration.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPermission(Notification.permission);
   }, []);
 

@@ -104,6 +104,8 @@ export function QuickAsk() {
 
   useEffect(() => {
     if (pending) {
+      // Transfer a one-time navigation value from session storage after hydration.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuestion(pending);
       sessionStorage.removeItem("helixedu_pending_question");
     }
@@ -232,7 +234,11 @@ export function DailyChallengeCard({ challenge }: { challenge: DailyChallenge })
   useEffect(() => {
     try {
       const raw = localStorage.getItem(TASK_KEY(challenge.dayKey));
-      if (raw) setDone(JSON.parse(raw));
+      if (raw) {
+        // Restore this device saved daily challenge state after hydration.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setDone(JSON.parse(raw));
+      }
     } catch {
       /* ignore */
     }

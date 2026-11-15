@@ -21,8 +21,12 @@ export function ThemeControls() {
     const savedTheme = localStorage.getItem("helixedu_theme");
     const savedScale = Number(localStorage.getItem("helixedu_font") ?? "100");
     const savedMotion = localStorage.getItem("helixedu_motion") === "reduced";
+    // Read browser-only preferences after hydration to keep server markup stable.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (savedTheme === "light" || savedTheme === "cosmos") setTheme(savedTheme);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if ([90, 100, 112, 125].includes(savedScale)) setScale(savedScale);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setReduceMotion(savedMotion);
   }, []);
 
