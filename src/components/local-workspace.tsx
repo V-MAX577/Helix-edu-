@@ -243,6 +243,7 @@ export function LocalLearningWorkspace() {
     const tasks = plan.tasks.map((task) => task.id === taskId ? { ...task, done: !task.done } : task);
     await putDeviceRecord("studyPlans", { ...plan, tasks });
     setPlanTasks(tasks);
+    setPlanMessage("Plan task saved on this device.");
   }
 
   if (!ready) return <main className="mx-auto max-w-6xl px-5 py-16"><Panel><p className="text-sm text-[var(--text-muted)]">Opening your local learning universe…</p></Panel></main>;
