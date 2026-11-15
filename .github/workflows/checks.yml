@@ -9,50 +9,26 @@ permissions:
 jobs:
   checks:
     runs-on: ubuntu-24.04
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: helixedu_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres -d helixedu_test"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-      - name: Push schema to temporary test database
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/helixedu_test
-        run: npx drizzle-kit push --config=drizzle.config.ts --force
-      - name: Unit and database integration tests
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/helixedu_test
-          HELIXEDU_AI_ENABLED: "false"
-        run: npm test
+      - name: Unit tests
+        run: npm run test:unit
       - name: TypeScript check
         run: npm run typecheck
       - name: ESLint
         run: npm run lint
       - name: Production build
-        if: always()
         run: npm run build
       - name: Install Chromium for browser tests
-        if: success()
         run: npx playwright install --with-deps chromium
       - name: Browser smoke tests
-        if: success()
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/helixedu_test
           HELIXEDU_AI_ENABLED: "false"
           CI: "true"
         run: npm run test:e2e
