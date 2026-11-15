@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createPlanAction, deletePlanAction } from "@/app/actions";
 import { Chip, Panel, ProgressBar } from "@/components/ui";
@@ -25,7 +25,7 @@ export function PlanClient({ plan, todayIndex }: { plan: StudyPlan; todayIndex: 
   const [done, setDone] = useState<Record<string, boolean>>({});
   const [loaded, setLoaded] = useState(false);
 
-  useState(() => {
+  useEffect(() => {
     try {
       const raw = localStorage.getItem(storageKey);
       if (raw) setDone(JSON.parse(raw));
@@ -149,7 +149,7 @@ export function PlanClient({ plan, todayIndex }: { plan: StudyPlan; todayIndex: 
             ⏰ Set a reminder
           </Link>
           <Link href="/learn" className="btn btn-primary btn-sm">
-            📚 Start today's block
+            📚 Start today&apos;s block
           </Link>
         </div>
       </div>

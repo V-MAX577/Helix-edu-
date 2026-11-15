@@ -169,7 +169,7 @@ export default async function LandingPage() {
           <div className="mb-8 text-center">
             <h2 className="text-3xl font-extrabold tracking-tight">Five ways to learn anything</h2>
             <p className="mx-auto mt-3 max-w-2xl text-[var(--text-muted)]">
-              Switch the assistant's mode and the same question gets a completely different, purpose-built answer.
+              Switch the assistant&apos;s mode and the same question gets a completely different, purpose-built answer.
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

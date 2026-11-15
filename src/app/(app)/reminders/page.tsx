@@ -34,7 +34,7 @@ export default async function RemindersPage() {
           </h1>
           <p className="mt-2 max-w-xl text-sm text-[var(--text-muted)]">
             Schedule study reminders and HELIXEDU will notify you in this browser while the tab is open.
-            Notifications use your device's own notification system — nothing is sent by email and no data
+            Notifications use your device&apos;s own notification system — nothing is sent by email and no data
             leaves your device.
           </p>
         </div>

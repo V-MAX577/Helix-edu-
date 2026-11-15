@@ -17,6 +17,7 @@ export type DeckCard = {
   box: number;
   dueAt: string | null;
   seen: number;
+  isDue: boolean;
 };
 
 const BOX_LABELS = ["New", "Learning", "Familiar", "Strong", "Mastered", "Permanent"];
@@ -52,11 +53,10 @@ export function FlashcardsClient({
   }, [cards]);
 
   const queue = useMemo(() => {
-    const now = Date.now();
     return cards.filter((card) => {
       if (subject !== "all" && card.subjectSlug !== subject) return false;
       if (!onlyDue) return true;
-      return !card.dueAt || new Date(card.dueAt).getTime() <= now;
+      return card.isDue;
     });
   }, [cards, subject, onlyDue]);
 

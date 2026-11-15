@@ -12,7 +12,7 @@ export default async function ProgressPage() {
   const user = await getLearner();
   await ensureSeeded();
 
-  const [stats, streak, subjectProgress, profile, recentLog] = await Promise.all([
+  const [stats, streak, subjectProgress, profile, recentLog, todayResult] = await Promise.all([
     getStats(user.id),
     getStreak(user.id),
     getSubjectProgress(user.id),
@@ -23,12 +23,15 @@ export default async function ProgressPage() {
       .where(eq(studyLog.userId, user.id))
       .orderBy(desc(studyLog.day))
       .limit(14),
+    db.select({ today: sql<string>`current_date::text` }),
   ]);
+
+  const today = todayResult[0]?.today ?? recentLog[0]?.day ?? "1970-01-01";
 
   // 14-day study heatmap data
   const days: { day: string; minutes: number }[] = [];
   for (let i = 13; i >= 0; i--) {
-    const d = new Date(Date.now() - i * 86_400_000).toISOString().slice(0, 10);
+    const d = new Date(Date.parse(`${today}T00:00:00Z`) - i * 86_400_000).toISOString().slice(0, 10);
     days.push({ day: d, minutes: 0 });
   }
   const logMap = new Map(recentLog.map((l) => [l.day, l.minutes]));
@@ -109,7 +112,7 @@ export default async function ProgressPage() {
           <div className="flex items-end gap-1.5" style={{ height: 120 }}>
             {days.map((day) => {
               const height = Math.round((day.minutes / maxMinutes) * 100);
-              const isToday = day.day === new Date().toISOString().slice(0, 10);
+              const isToday = day.day === today;
               return (
                 <div key={day.day} className="flex flex-1 flex-col items-center gap-1.5">
                   <div

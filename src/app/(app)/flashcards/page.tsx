@@ -22,6 +22,7 @@ export default async function FlashcardsPage() {
       subjectIcon: subjects.icon,
       box: sql<number>`coalesce(${flashcardReviews.box}, 1)`,
       dueAt: sql<string | null>`${flashcardReviews.dueAt}`,
+      isDue: sql<boolean>`(${flashcardReviews.dueAt} is null or ${flashcardReviews.dueAt} <= now())`,
       seen: sql<number>`coalesce(${flashcardReviews.seen}, 0)`,
     })
     .from(flashcards)
@@ -34,7 +35,6 @@ export default async function FlashcardsPage() {
 
   const stats = await getStats(user.id);
 
-  const now = Date.now();
   const cards: DeckCard[] = rows.map((row) => ({
     id: row.id,
     front: row.front,
@@ -46,9 +46,10 @@ export default async function FlashcardsPage() {
     box: Number(row.box),
     dueAt: row.dueAt ? new Date(row.dueAt).toISOString() : null,
     seen: Number(row.seen),
+    isDue: row.isDue,
   }));
 
-  const dueCount = cards.filter((c) => !c.dueAt || new Date(c.dueAt).getTime() <= now).length;
+  const dueCount = cards.filter((c) => c.isDue).length;
 
   const reviewedToday = await db
     .select({ n: count() })
