@@ -11,12 +11,12 @@ export type LessonBlock =
   | { kind: "formula"; text: string }
   | { kind: "code"; lang: string; code: string };
 
-type SeedLesson = { slug: string; title: string; minutes: number; blocks: LessonBlock[] };
-type SeedCard = { front: string; back: string; hint?: string };
-type SeedQuestion = { prompt: string; options: string[]; answerIndex: number; explanation: string; difficulty?: "easy" | "medium" | "hard" };
-type SeedQuiz = { slug: string; title: string; description: string; difficulty?: "easy" | "medium" | "hard"; timeLimitSec: number; questions: number[] };
-type SeedChapter = { slug: string; title: string; summary: string; level?: "beginner" | "intermediate" | "advanced"; minutes?: number; lessons: SeedLesson[]; cards: SeedCard[]; questions: SeedQuestion[]; quizzes: SeedQuiz[] };
-type SeedSubject = { slug: string; name: string; tagline: string; icon: string; color: string; chapters: SeedChapter[] };
+export type SeedLesson = { slug: string; title: string; minutes: number; blocks: LessonBlock[] };
+export type SeedCard = { front: string; back: string; hint?: string };
+export type SeedQuestion = { prompt: string; options: string[]; answerIndex: number; explanation: string; difficulty?: "easy" | "medium" | "hard" };
+export type SeedQuiz = { slug: string; title: string; description: string; difficulty?: "easy" | "medium" | "hard"; timeLimitSec: number; questions: number[] };
+export type SeedChapter = { slug: string; title: string; summary: string; level?: "beginner" | "intermediate" | "advanced"; minutes?: number; lessons: SeedLesson[]; cards: SeedCard[]; questions: SeedQuestion[]; quizzes: SeedQuiz[] };
+export type SeedSubject = { slug: string; name: string; tagline: string; icon: string; color: string; chapters: SeedChapter[] };
 
 export const CURRICULUM: SeedSubject[] = [
   /* ============================= MATHEMATICS ============================ */
@@ -1227,3 +1227,47 @@ export const ACHIEVEMENTS: { code: string; name: string; description: string; ic
   { code: "scholar", name: "HELIX Scholar", description: "Complete 25 lessons.", icon: "👑", tier: "gold" },
 ];
 
+
+export function getSubjects(): SeedSubject[] {
+  return CURRICULUM;
+}
+
+export function getSubject(subjectSlug: string): SeedSubject | undefined {
+  return CURRICULUM.find((subject) => subject.slug === subjectSlug);
+}
+
+export function getChapter(subjectSlug: string, chapterSlug: string): SeedChapter | undefined {
+  return getSubject(subjectSlug)?.chapters.find((chapter) => chapter.slug === chapterSlug);
+}
+
+export function getLesson(subjectSlug: string, chapterSlug: string, lessonSlug: string) {
+  const chapter = getChapter(subjectSlug, chapterSlug);
+  const lesson = chapter?.lessons.find((item) => item.slug === lessonSlug);
+  return lesson && chapter ? { lesson, chapter, subject: getSubject(subjectSlug)! } : undefined;
+}
+
+export function getAllQuestions() {
+  return CURRICULUM.flatMap((subject) =>
+    subject.chapters.flatMap((chapter) =>
+      chapter.questions.map((question, index) => ({
+        ...question,
+        id: `${subject.slug}:${chapter.slug}:q${index + 1}`,
+        subjectSlug: subject.slug,
+        chapterSlug: chapter.slug,
+      })),
+    ),
+  );
+}
+
+export function getAllFlashcards() {
+  return CURRICULUM.flatMap((subject) =>
+    subject.chapters.flatMap((chapter) =>
+      chapter.cards.map((card, index) => ({
+        ...card,
+        id: `${subject.slug}:${chapter.slug}:f${index + 1}`,
+        subjectSlug: subject.slug,
+        chapterSlug: chapter.slug,
+      })),
+    ),
+  );
+}
