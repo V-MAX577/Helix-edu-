@@ -1,21 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { and, eq } from "drizzle-orm";
-import { db } from "@/db";
-import { chatMessages, chatSessions, profiles } from "@/db/schema";
-import { getLearner } from "@/lib/learner";
 import { activeProvider, callProvider, listProviders, ProviderError } from "@/lib/ai";
-import { runEngine } from "@/lib/engine";
-import { ensureSeeded, getQuestionBank } from "@/lib/progress";
+import { runEngine, type EngineLevel, type EngineMode } from "@/lib/engine";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const MODES = ["deep-think", "quick-learn", "exam-prep", "creative", "coding"] as const;
+const MODES: EngineMode[] = ["deep-think", "quick-learn", "exam-prep", "creative", "coding"];
+const LEVELS: EngineLevel[] = ["beginner", "intermediate", "advanced"];
+
+type Turn = { role: "user" | "assistant"; content: string };
 
 export async function POST(request: NextRequest) {
-  const user = await getLearner();
-
-  let body: { sessionId?: string; message?: string; mode?: string };
+  let body: {
+    message?: string;
+    mode?: string;
+    level?: string;
+    className?: string;
+    board?: string;
+    history?: Turn[];
+  };
   try {
     body = await request.json();
   } catch {
@@ -24,116 +27,58 @@ export async function POST(request: NextRequest) {
 
   const message = String(body.message ?? "").trim();
   if (!message) return NextResponse.json({ error: "Type a question first." }, { status: 400 });
-  if (message.length > 4000)
-    return NextResponse.json({ error: "That question is too long (4000 characters max)." }, { status: 400 });
+  if (message.length > 4000) return NextResponse.json({ error: "That question is too long (4000 characters max)." }, { status: 400 });
 
-  const mode = MODES.includes(body.mode as (typeof MODES)[number])
-    ? (body.mode as (typeof MODES)[number])
-    : "deep-think";
+  const mode = MODES.includes(body.mode as EngineMode) ? body.mode as EngineMode : "deep-think";
+  const level = LEVELS.includes(body.level as EngineLevel) ? body.level as EngineLevel : "intermediate";
+  const history = Array.isArray(body.history)
+    ? body.history.filter((turn): turn is Turn => Boolean(turn) && (turn.role === "user" || turn.role === "assistant") && typeof turn.content === "string").slice(-12)
+    : [];
 
-  await ensureSeeded();
-
-  const profile = await db.select().from(profiles).where(eq(profiles.userId, user.id)).limit(1);
-  const p = profile[0];
-
-  /* Resolve only chat sessions owned by this learner. */
-  let sessionId = body.sessionId;
-  if (sessionId) {
-    const owned = await db
-      .select({ id: chatSessions.id })
-      .from(chatSessions)
-      .where(and(eq(chatSessions.id, sessionId), eq(chatSessions.userId, user.id)))
-      .limit(1);
-    if (!owned.length) sessionId = undefined;
-  }
-  if (!sessionId) {
-    const [created] = await db
-      .insert(chatSessions)
-      .values({ userId: user.id, mode, title: message.slice(0, 60) })
-      .returning();
-    sessionId = created.id;
-  }
-
-  const historyRows = await db
-    .select({ role: chatMessages.role, content: chatMessages.content })
-    .from(chatMessages)
-    .where(eq(chatMessages.sessionId, sessionId))
-    .orderBy(chatMessages.createdAt)
-    .limit(12);
-
-  await db
-    .insert(chatMessages)
-    .values({ sessionId, role: "user", content: message, provider: "user" });
-
-  const history = historyRows.map((r) => ({
-    role: r.role as "user" | "assistant",
-    content: r.content,
-  }));
-
-  /* 1. Try a connected provider (only if explicitly configured). */
   const provider = activeProvider();
-  let replyText = "";
-  let providerId = "helix-engine";
-  let providerLabel = "Helix Offline Engine";
-  let usedProvider = false;
-  let providerError: string | null = null;
-
   if (provider) {
     try {
       const result = await callProvider({
         messages: [...history, { role: "user", content: message }],
         mode,
-        level: p?.level ?? "intermediate",
-        board: p?.board ?? "Maharashtra State Board",
-        className: p?.className ?? "Class 10",
+        level,
+        board: String(body.board ?? "Maharashtra State Board"),
+        className: String(body.className ?? "Class 8"),
       });
-      replyText = result.text;
-      providerId = result.provider;
-      providerLabel = provider.label;
-      usedProvider = true;
-    } catch (err) {
-      providerError =
-        err instanceof ProviderError ? err.message : "The connected AI provider failed to respond.";
+      return NextResponse.json({
+        reply: result.text,
+        provider: result.provider,
+        providerLabel: provider.label,
+        usedProvider: true,
+        providers: listProviders().map((item) => ({ id: item.id, label: item.label, configured: item.configured })),
+      });
+    } catch (error) {
+      const providerError = error instanceof ProviderError ? error.message : "The configured AI provider did not respond.";
+      const fallback = runEngine({ message, mode, level, board: String(body.board ?? "Maharashtra State Board"), className: String(body.className ?? "Class 8"), history });
+      return NextResponse.json({
+        reply: fallback.text,
+        provider: "helix-engine",
+        providerLabel: "Helix Offline Engine (provider unavailable)",
+        usedProvider: false,
+        providerError,
+        providers: listProviders().map((item) => ({ id: item.id, label: item.label, configured: item.configured })),
+      });
     }
   }
 
-  /* 2. Fall back to the offline Helix Engine (always available, always free). */
-  if (!usedProvider) {
-    const engine = runEngine({
-      message,
-      mode,
-      level: (p?.level as "beginner" | "intermediate" | "advanced") ?? "intermediate",
-      className: p?.className ?? "Class 10",
-      board: p?.board ?? "Maharashtra State Board",
-      history,
-      questionBank: await getQuestionBank(),
-    });
-    replyText = engine.text;
-    providerId = "helix-engine";
-    providerLabel = providerError
-      ? "Helix Offline Engine (provider unavailable)"
-      : "Helix Offline Engine";
-  }
-
-  await db.insert(chatMessages).values({
-    sessionId,
-    role: "assistant",
-    content: replyText,
-    provider: providerId,
-  });
-  await db
-    .update(chatSessions)
-    .set({ mode, updatedAt: new Date() })
-    .where(and(eq(chatSessions.id, sessionId), eq(chatSessions.userId, user.id)));
-
-  return NextResponse.json({
-    reply: replyText,
-    sessionId,
+  const result = runEngine({
+    message,
     mode,
-    usedProvider,
-    provider: providerId,
-    providerLabel,
-    providerError,
-    providers: listProviders().map((x) => ({ id: x.id, label: x.label, configured: x.configured })),
+    level,
+    board: String(body.board ?? "Maharashtra State Board"),
+    className: String(body.className ?? "Class 8"),
+    history,
+  });
+  return NextResponse.json({
+    reply: result.text,
+    provider: "helix-engine",
+    providerLabel: "Helix Offline Engine",
+    usedProvider: false,
+    providers: listProviders().map((item) => ({ id: item.id, label: item.label, configured: item.configured })),
   });
 }
