@@ -109,9 +109,9 @@ export default async function LandingPage() {
             className="animate-rise mx-auto mt-7 max-w-2xl text-base text-[var(--text-muted)] sm:text-lg"
             style={{ animationDelay: "160ms" }}
           >
-            A cosmic, AI-powered education platform with real lessons, auto-marked quizzes,
-            spaced-repetition flashcards and a study assistant that actually works — built to run
-            fast on any Android phone, even with a weak connection.
+            A cosmic, device-only education workspace with bundled lessons, auto-marked quizzes,
+            spaced-repetition flashcards, notes and a built-in study engine — designed to run
+            on Android phones without accounts, API keys or database servers.
           </p>
 
           <LandingActions />
