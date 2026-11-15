@@ -48,7 +48,7 @@ export function DeviceBackupControls() {
     <section className="panel mt-6 p-5">
       <h2 className="text-lg font-bold">🗄️ Device data & backup</h2>
       <p className="mt-2 text-sm text-[var(--text-muted)]">
-        Learner records are stored in this browser's IndexedDB. They are not synced to an account.
+        Learner records are stored in this browser&apos;s IndexedDB. They are not synced to an account.
         Export a backup before clearing browser data or moving to another device.
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
