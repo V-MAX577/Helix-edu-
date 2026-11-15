@@ -10,7 +10,7 @@ const LEGACY_TABS: Record<string, string> = {
   "/progress": "overview",
   "/notes": "notes",
   "/planner": "planner",
-  "/reminders": "planner",
+  "/reminders": "reminders",
   "/bookmarks": "bookmarks",
   "/search": "learn",
   "/settings": "settings",
