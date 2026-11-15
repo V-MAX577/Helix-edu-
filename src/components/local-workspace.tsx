@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { Markdown, Panel } from "@/components/ui";
 import { CURRICULUM, getAllFlashcards, getAllQuestions, type LessonBlock } from "@/lib/curriculum";
 import { runEngine, type EngineMode } from "@/lib/engine";
@@ -218,7 +219,7 @@ export function LocalLearningWorkspace() {
   return (
     <main className="min-h-dvh">
       <header className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-5 py-5 lg:px-8">
-        <a href="/" className="text-gradient text-lg font-extrabold tracking-[0.16em]">HELIXEDU</a>
+        <Link href="/" className="text-gradient text-lg font-extrabold tracking-[0.16em]">HELIXEDU</Link>
         <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
           <span className="size-2 rounded-full bg-emerald-400" /> DEVICE-ONLY MODE
         </div>
