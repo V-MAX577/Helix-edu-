@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { Markdown, Panel } from "@/components/ui";
 import { CURRICULUM, getAllFlashcards, getAllQuestions, type LessonBlock } from "@/lib/curriculum";
 import { runEngine, type EngineMode } from "@/lib/engine";
@@ -91,7 +91,7 @@ export function LocalLearningWorkspace() {
   const currentQuestion = quizQuestions[questionIndex];
   const currentCard = allCards[cardIndex];
 
-  async function refreshProgress() {
+  const refreshProgress = useCallback(async () => {
     const [nextStats, nextStreak, completed, savedNotes] = await Promise.all([
       getLearnerStats(),
       getStudyStreak(),
@@ -102,7 +102,7 @@ export function LocalLearningWorkspace() {
     setStreak(nextStreak);
     setCompletedIds(completed.map((row) => row.lessonId ?? row.id));
     setNotes(savedNotes.sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.updatedAt.localeCompare(a.updatedAt)));
-  }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -113,6 +113,8 @@ export function LocalLearningWorkspace() {
           getLocalChatMessages("local-assistant"),
         ]);
         if (cancelled) return;
+        const requestedTab = new URLSearchParams(window.location.search).get("tab");
+        if (TABS.some((item) => item.id === requestedTab)) setTab(requestedTab as Tab);
         setSettings(profile);
         setMessages(savedMessages);
         await refreshProgress();
@@ -123,7 +125,7 @@ export function LocalLearningWorkspace() {
     }
     void load();
     return () => { cancelled = true; };
-  }, []);
+  }, [refreshProgress]);
 
   useEffect(() => {
     const nextSubject = CURRICULUM.find((item) => item.slug === subjectSlug);
