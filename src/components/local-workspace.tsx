@@ -87,6 +87,7 @@ export function LocalLearningWorkspace() {
   const [planTitle, setPlanTitle] = useState("My study plan");
   const [planMinutes, setPlanMinutes] = useState(30);
   const [planMessage, setPlanMessage] = useState("");
+  const [planTasks, setPlanTasks] = useState<{ id: string; label: string; done: boolean }[]>([]);
 
   const subject = CURRICULUM.find((item) => item.slug === subjectSlug) ?? CURRICULUM[0];
   const chapter = subject?.chapters.find((item) => item.slug === chapterSlug) ?? subject?.chapters[0];
@@ -118,9 +119,10 @@ export function LocalLearningWorkspace() {
     let cancelled = false;
     async function load() {
       try {
-        const [profile, savedMessages] = await Promise.all([
+        const [profile, savedMessages, savedPlan] = await Promise.all([
           getLearnerSettings(),
           getLocalChatMessages("local-assistant"),
+          getDeviceRecord<{ id: string; tasks?: { id: string; label: string; done: boolean }[] }>("studyPlans", "active-plan"),
         ]);
         if (cancelled) return;
         const params = new URLSearchParams(window.location.search);
@@ -141,6 +143,7 @@ export function LocalLearningWorkspace() {
         }
         setSettings(profile);
         setMessages(savedMessages);
+        setPlanTasks(savedPlan?.tasks ?? []);
         await refreshProgress();
       } catch {
         // The interface remains usable and shows storage errors on save actions.
@@ -230,7 +233,16 @@ export function LocalLearningWorkspace() {
       ],
     };
     await putDeviceRecord("studyPlans", plan);
+    setPlanTasks(plan.tasks);
     setPlanMessage("Study plan saved on this device.");
+  }
+
+  async function togglePlanTask(taskId: string) {
+    const plan = await getDeviceRecord<{ id: string; tasks?: { id: string; label: string; done: boolean }[] }>("studyPlans", "active-plan");
+    if (!plan?.tasks) return;
+    const tasks = plan.tasks.map((task) => task.id === taskId ? { ...task, done: !task.done } : task);
+    await putDeviceRecord("studyPlans", { ...plan, tasks });
+    setPlanTasks(tasks);
   }
 
   if (!ready) return <main className="mx-auto max-w-6xl px-5 py-16"><Panel><p className="text-sm text-[var(--text-muted)]">Opening your local learning universe…</p></Panel></main>;
@@ -334,7 +346,7 @@ export function LocalLearningWorkspace() {
           <div className="mt-5 grid gap-2">{messages.slice(-8).map((message) => <div key={message.id} className={`rounded-xl p-3 text-sm ${message.role === "user" ? "ml-6 bg-violet-500/10" : "mr-6 bg-[var(--panel)]"}`}><p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">{message.role === "user" ? "You" : "Helix"}</p><div className="whitespace-pre-wrap">{message.content}</div></div>)}</div>
         </Panel>}
 
-        {tab === "planner" && <Panel><h2 className="text-xl font-bold">🗓️ Study planner</h2><p className="mt-2 text-sm text-[var(--text-muted)]">Create a simple daily target. The plan is stored locally and stays on this device.</p><form className="mt-4 grid gap-3 sm:max-w-md" onSubmit={createStudyPlan}><input className="field" value={planTitle} onChange={(event) => setPlanTitle(event.target.value)} aria-label="Plan title" /><label className="grid gap-1 text-sm">Minutes per day<input className="field" type="number" min={10} max={240} value={planMinutes} onChange={(event) => setPlanMinutes(Number(event.target.value))} /></label><button type="submit" className="btn btn-primary btn-sm">Save study plan</button></form>{planMessage && <p role="status" className="mt-3 text-sm text-emerald-300">{planMessage}</p>}</Panel>}
+        {tab === "planner" && <Panel><h2 className="text-xl font-bold">🗓️ Study planner</h2><p className="mt-2 text-sm text-[var(--text-muted)]">Create a simple daily target. The plan is stored locally and stays on this device.</p><form className="mt-4 grid gap-3 sm:max-w-md" onSubmit={createStudyPlan}><input className="field" value={planTitle} onChange={(event) => setPlanTitle(event.target.value)} aria-label="Plan title" /><label className="grid gap-1 text-sm">Minutes per day<input className="field" type="number" min={10} max={240} value={planMinutes} onChange={(event) => setPlanMinutes(Number(event.target.value))} /></label><button type="submit" className="btn btn-primary btn-sm">Save study plan</button></form>{planMessage && <p role="status" className="mt-3 text-sm text-emerald-300">{planMessage}</p>}{planTasks.length > 0 && <div className="mt-5 grid gap-2"><h3 className="font-semibold">Your plan tasks</h3>{planTasks.map((task) => <label key={task.id} className="flex items-center gap-3 rounded-xl border border-[var(--panel-border)] p-3 text-sm"><input type="checkbox" checked={task.done} onChange={() => void togglePlanTask(task.id)} /> <span className={task.done ? "text-[var(--text-muted)] line-through" : ""}>{task.label}</span></label>)}</div>}</Panel>}
 
         {tab === "reminders" && <LocalReminderPanel />}
 
