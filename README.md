@@ -5,7 +5,7 @@ A free, installable learning workspace designed to run on phones and work offlin
 ## Device-only architecture
 
 - Learner profile, lesson progress, quiz attempts, flashcard reviews, notes, bookmarks, study plans, reminders and assistant history are stored in the browser's IndexedDB.
-- Learner records are not sent to a HELIXEDU database and are not synced between devices.
+- Learner records stay in this browser and are not synced between devices. Study reminder alerts work while HELIXEDU is open; background push delivery is not included.
 - Curriculum and the Helix Offline Engine are bundled with the app.
 - No database server, database URL, API key or payment method is required for the local learning experience.
 - The study assistant runs the built-in Helix Engine in the browser. There is no external AI API integration or API-key requirement.
