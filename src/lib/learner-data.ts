@@ -196,7 +196,12 @@ export async function toggleLocalBookmark(input: Omit<LocalBookmark, "id" | "cre
   return true;
 }
 
-export async function saveChatMessage(input: Omit<LocalChatMessage, "id" | "createdAt">) {
+export async function saveChatMessage(input: {
+  sessionId: string;
+  role: "user" | "assistant";
+  content: string;
+  provider: string;
+}) {
   const row: LocalChatMessage = { ...input, id: makeId("message"), createdAt: new Date().toISOString() };
   await putDeviceRecord("chatMessages", row);
   return row;
