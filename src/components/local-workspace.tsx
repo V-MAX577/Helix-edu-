@@ -238,6 +238,8 @@ export function LocalLearningWorkspace() {
   }
 
   async function togglePlanTask(taskId: string) {
+    const optimistic = planTasks.map((task) => task.id === taskId ? { ...task, done: !task.done } : task);
+    setPlanTasks(optimistic);
     const plan = await getDeviceRecord<{ id: string; tasks?: { id: string; label: string; done: boolean }[] }>("studyPlans", "active-plan");
     if (!plan?.tasks) return;
     const tasks = plan.tasks.map((task) => task.id === taskId ? { ...task, done: !task.done } : task);
