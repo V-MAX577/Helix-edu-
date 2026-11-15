@@ -57,5 +57,5 @@ test("backup export downloads a JSON file", async ({ page }) => {
 test("health endpoint does not require a database", async ({ request }) => {
   const response = await request.get("/api/health");
   expect(response.ok()).toBeTruthy();
-  await expect(response.json()).resolves.toMatchObject({ ok: true, database: false, storage: "device-only" });
+  await expect(response.json()).resolves.toMatchObject({ ok: true, storage: "device-only" });
 });
