@@ -16,8 +16,10 @@ jobs:
         run: |
           set -euo pipefail
           test -f helixedu-ai-education-platform.zip
-          find . -maxdepth 1 -type f ! -name README.md ! -name .gitignore -delete
-          unzip -o helixedu-ai-education-platform.zip -d .
+          mkdir -p /tmp/helixedu-source
+          unzip -q helixedu-ai-education-platform.zip -d /tmp/helixedu-source
+          find . -maxdepth 1 -type f ! -name README.md ! -name .gitignore ! -name helixedu-ai-education-platform.zip -delete
+          cp -a /tmp/helixedu-source/. .
           rm -f helixedu-ai-education-platform.zip
       - name: Commit restored source
         run: |
