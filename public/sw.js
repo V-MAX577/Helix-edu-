@@ -29,7 +29,7 @@ self.addEventListener("fetch", (event) => {
     request.method !== "GET" ||
     url.origin !== self.location.origin ||
     url.pathname.startsWith("/api/") ||
-    url.pathname.startsWith("/_next/") ||
+    url.pathname.startsWith("/_next/image") ||
     url.pathname === "/sw.js"
   ) return;
 
