@@ -1,8 +1,4 @@
 import Link from "next/link";
-import { desc } from "drizzle-orm";
-import { db } from "@/db";
-import { subjects } from "@/db/schema";
-import { ensureSeeded } from "@/lib/progress";
 import { Logo, Wordmark } from "@/components/ui";
 import { LandingActions } from "./landing-actions";
 
@@ -56,8 +52,16 @@ const STEPS = [
 ];
 
 export default async function LandingPage() {
-  await ensureSeeded();
-  const rows = await db.select().from(subjects).orderBy(subjects.sortOrder);
+  const rows = [
+    { id: "math", slug: "mathematics", name: "Mathematics", tagline: "Numbers, patterns and the language of the universe", icon: "📐" },
+    { id: "science", slug: "science", name: "Science", tagline: "Explore how the universe works", icon: "🔬" },
+    { id: "english", slug: "english", name: "English", tagline: "Read, write and communicate clearly", icon: "📖" },
+    { id: "history", slug: "history", name: "History", tagline: "Understand the stories that shaped us", icon: "🏛️" },
+    { id: "geography", slug: "geography", name: "Geography", tagline: "Discover Earth and its systems", icon: "🌍" },
+    { id: "computers", slug: "computer-science", name: "Computer Science", tagline: "Build logic and digital skills", icon: "💻" },
+    { id: "languages", slug: "languages", name: "Languages", tagline: "Learn to communicate across cultures", icon: "🗣️" },
+    { id: "general", slug: "general-knowledge", name: "General Knowledge", tagline: "Curiosity without borders", icon: "🌌" },
+  ];
 
   return (
     <div className="min-h-dvh">
@@ -73,8 +77,8 @@ export default async function LandingPage() {
             <Link href="/search" className="btn btn-ghost btn-sm hidden sm:inline-flex">
               🔍 Search lessons
             </Link>
-            <Link href="/dashboard" className="btn btn-primary btn-sm">
-              Enter HELIXEDU →
+            <Link href="/demo" className="btn btn-primary btn-sm">
+              Explore demo →
             </Link>
           </div>
         </nav>
@@ -284,7 +288,7 @@ export default async function LandingPage() {
             Join HELIXEDU and turn curiosity into mastery — one chapter, one quiz, one streak at a time.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link href="/dashboard" className="btn btn-primary px-7 py-3 text-base">
+            <Link href="/demo" className="btn btn-primary px-7 py-3 text-base">
               Enter HELIXEDU
             </Link>
             <Link href="/learn" className="btn btn-ghost px-7 py-3 text-base">
