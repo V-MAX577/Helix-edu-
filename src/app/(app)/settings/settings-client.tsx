@@ -21,10 +21,12 @@ export function ThemeControls() {
     const savedTheme = localStorage.getItem("helixedu_theme");
     const savedScale = Number(localStorage.getItem("helixedu_font") ?? "100");
     const savedMotion = localStorage.getItem("helixedu_motion") === "reduced";
-    if (savedTheme === "light" || savedTheme === "cosmos") setTheme(savedTheme);
-    if ([90, 100, 112, 125].includes(savedScale)) setScale(savedScale);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setReduceMotion(savedMotion);
+    const frame = window.requestAnimationFrame(() => {
+      if (savedTheme === "light" || savedTheme === "cosmos") setTheme(savedTheme);
+      if ([90, 100, 112, 125].includes(savedScale)) setScale(savedScale);
+      setReduceMotion(savedMotion);
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   function applyTheme(next: "cosmos" | "light") {
@@ -264,4 +266,3 @@ export function SettingsForm({
     </form>
   );
 }
-
