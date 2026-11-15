@@ -181,9 +181,13 @@ export async function importDeviceData(input: unknown): Promise<void> {
   const tx = db.transaction([...DEVICE_STORES], "readwrite");
   const done = transactionDone(tx);
   for (const storeName of DEVICE_STORES) {
+    const records = backup.stores[storeName];
+    // Backups may contain a subset of stores. Replace only sections explicitly
+    // included so a partial backup cannot silently erase unrelated learner data.
+    if (records === undefined) continue;
     const store = tx.objectStore(storeName);
     store.clear();
-    for (const record of backup.stores[storeName] ?? []) store.put(record);
+    for (const record of records) store.put(record);
   }
   await done;
 }
