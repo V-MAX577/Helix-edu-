@@ -22,7 +22,7 @@ export type EngineInput = {
   board: string;
   /** Recent turns so follow-up questions ("explain it simpler") make sense. */
   history?: { role: "user" | "assistant"; content: string }[];
-  /** Practice questions available in the database, keyed by subject slug. */
+  /** Bundled practice questions, keyed by subject slug. */
   questionBank?: Record<string, { prompt: string; options: string[]; answerIndex: number; explanation: string }[]>;
 };
 
@@ -367,7 +367,7 @@ export function runEngine(input: EngineInput): EngineReply {
     };
   }
 
-  /* 5. Practice questions from the database bank */
+  /* 5. Practice questions from the bundled curriculum bank */
   if (PRACTICE_WORDS.test(message)) {
     const practice = buildPractice(input);
     return {
