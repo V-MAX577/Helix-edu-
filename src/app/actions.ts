@@ -228,7 +228,10 @@ export async function toggleNotePinAction(id: string) {
     .where(and(eq(notes.id, id), eq(notes.userId, user.id)))
     .limit(1);
   if (note) {
-    await db.update(notes).set({ pinned: !note.pinned }).where(eq(notes.id, id));
+    await db
+      .update(notes)
+      .set({ pinned: !note.pinned })
+      .where(and(eq(notes.id, id), eq(notes.userId, user.id)));
   }
   revalidatePath("/notes");
 }
@@ -258,7 +261,9 @@ export async function toggleBookmarkAction(input: {
     .limit(1);
 
   if (existing.length) {
-    await db.delete(bookmarks).where(eq(bookmarks.id, existing[0].id));
+    await db
+      .delete(bookmarks)
+      .where(and(eq(bookmarks.id, existing[0].id), eq(bookmarks.userId, user.id)));
     revalidatePath("/bookmarks");
     return { bookmarked: false };
   }
@@ -384,7 +389,12 @@ export async function toggleReminderAction(id: string) {
     .from(reminders)
     .where(and(eq(reminders.id, id), eq(reminders.userId, user.id)))
     .limit(1);
-  if (reminder) await db.update(reminders).set({ enabled: !reminder.enabled }).where(eq(reminders.id, id));
+  if (reminder) {
+    await db
+      .update(reminders)
+      .set({ enabled: !reminder.enabled })
+      .where(and(eq(reminders.id, id), eq(reminders.userId, user.id)));
+  }
   revalidatePath("/reminders");
 }
 
