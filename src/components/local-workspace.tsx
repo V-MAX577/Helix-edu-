@@ -87,6 +87,10 @@ export function LocalLearningWorkspace() {
   const lesson = chapter?.lessons.find((item) => item.slug === lessonSlug) ?? chapter?.lessons[0];
   const allQuestions = useMemo(() => getAllQuestions(), []);
   const allCards = useMemo(() => getAllFlashcards(), []);
+  const questionBank = useMemo(
+    () => Object.fromEntries(CURRICULUM.map((item) => [item.slug, item.chapters.flatMap((chapterItem) => chapterItem.questions)])),
+    [],
+  );
   const quizQuestions = useMemo(() => allQuestions.slice(0, 10), [allQuestions]);
   const currentQuestion = quizQuestions[questionIndex];
   const currentCard = allCards[cardIndex];
@@ -185,6 +189,7 @@ export function LocalLearningWorkspace() {
       className: settings.className,
       board: settings.board,
       history,
+      questionBank,
     });
     const assistantMessage = await saveChatMessage({ sessionId: "local-assistant", role: "assistant", content: response.text, provider: "helix-engine" });
     setMessages((current) => [...current, userMessage, assistantMessage]);
