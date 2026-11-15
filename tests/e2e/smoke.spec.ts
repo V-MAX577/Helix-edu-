@@ -92,3 +92,49 @@ test("study reminders persist on this device", async ({ page }) => {
   await page.reload();
   await expect(page.getByText("Read science")).toBeVisible();
 });
+
+test("backup import restores device data and rejects invalid records safely", async ({ page }) => {
+  await page.goto("/demo?tab=settings");
+  const backup = {
+    format: "helixedu-device-backup",
+    version: 1,
+    exportedAt: "2026-11-15T00:00:00.000Z",
+    stores: {
+      notes: [{
+        id: "backup-note-1",
+        title: "Restored science note",
+        body: "Imported from a device backup.",
+        pinned: false,
+        createdAt: "2026-11-15T00:00:00.000Z",
+        updatedAt: "2026-11-15T00:00:00.000Z",
+      }],
+    },
+  };
+
+  const fileInput = page.locator('input[type="file"]');
+  await fileInput.setInputFiles({
+    name: "helixedu-backup.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(backup)),
+  });
+  await expect(page.getByRole("status")).toContainText("Backup restored");
+
+  await page.getByRole("navigation", { name: "HELIXEDU sections" }).getByRole("button", { name: /Notes/ }).click();
+  await expect(page.getByText("Restored science note")).toBeVisible();
+
+  const invalidBackup = {
+    format: "helixedu-device-backup",
+    version: 1,
+    stores: { notes: [{ title: "Missing required ID" }] },
+  };
+  await page.getByRole("navigation", { name: "HELIXEDU sections" }).getByRole("button", { name: /Settings/ }).click();
+  await fileInput.setInputFiles({
+    name: "invalid-helixedu-backup.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(invalidBackup)),
+  });
+  await expect(page.getByRole("status")).toContainText("section in this backup is invalid");
+
+  await page.getByRole("navigation", { name: "HELIXEDU sections" }).getByRole("button", { name: /Notes/ }).click();
+  await expect(page.getByText("Restored science note")).toBeVisible();
+});
