@@ -131,22 +131,6 @@ export function LocalLearningWorkspace() {
     return () => { cancelled = true; };
   }, [refreshProgress]);
 
-  useEffect(() => {
-    const nextSubject = CURRICULUM.find((item) => item.slug === subjectSlug);
-    if (!nextSubject) return;
-    if (!nextSubject.chapters.some((item) => item.slug === chapterSlug)) {
-      setChapterSlug(nextSubject.chapters[0]?.slug ?? "");
-      setLessonSlug(nextSubject.chapters[0]?.lessons[0]?.slug ?? "");
-    }
-  }, [subjectSlug, chapterSlug]);
-
-  useEffect(() => {
-    const nextChapter = subject?.chapters.find((item) => item.slug === chapterSlug);
-    if (nextChapter && !nextChapter.lessons.some((item) => item.slug === lessonSlug)) {
-      setLessonSlug(nextChapter.lessons[0]?.slug ?? "");
-    }
-  }, [chapterSlug, lessonSlug, subject]);
-
   async function markLessonComplete() {
     if (!lesson) return;
     await completeLesson(lesson.slug, lesson.minutes);
@@ -292,8 +276,8 @@ export function LocalLearningWorkspace() {
         {tab === "learn" && <section className="grid gap-4 lg:grid-cols-[18rem_1fr]">
           <Panel className="grid content-start gap-3">
             <h2 className="font-bold">Choose a lesson</h2>
-            <label className="grid gap-1 text-xs text-[var(--text-muted)]">Subject<select className="field" value={subjectSlug} onChange={(event) => setSubjectSlug(event.target.value)}>{CURRICULUM.map((item) => <option key={item.slug} value={item.slug}>{item.name}</option>)}</select></label>
-            <label className="grid gap-1 text-xs text-[var(--text-muted)]">Chapter<select className="field" value={chapter?.slug ?? ""} onChange={(event) => setChapterSlug(event.target.value)}>{subject?.chapters.map((item) => <option key={item.slug} value={item.slug}>{item.title}</option>)}</select></label>
+            <label className="grid gap-1 text-xs text-[var(--text-muted)]">Subject<select className="field" value={subjectSlug} onChange={(event) => { const next = CURRICULUM.find((item) => item.slug === event.target.value); setSubjectSlug(event.target.value); setChapterSlug(next?.chapters[0]?.slug ?? ""); setLessonSlug(next?.chapters[0]?.lessons[0]?.slug ?? ""); }}>{CURRICULUM.map((item) => <option key={item.slug} value={item.slug}>{item.name}</option>)}</select></label>
+            <label className="grid gap-1 text-xs text-[var(--text-muted)]">Chapter<select className="field" value={chapter?.slug ?? ""} onChange={(event) => { const next = subject?.chapters.find((item) => item.slug === event.target.value); setChapterSlug(event.target.value); setLessonSlug(next?.lessons[0]?.slug ?? ""); }}>{subject?.chapters.map((item) => <option key={item.slug} value={item.slug}>{item.title}</option>)}</select></label>
             <label className="grid gap-1 text-xs text-[var(--text-muted)]">Lesson<select className="field" value={lesson?.slug ?? ""} onChange={(event) => setLessonSlug(event.target.value)}>{chapter?.lessons.map((item) => <option key={item.slug} value={item.slug}>{item.title}</option>)}</select></label>
             <p className="text-xs text-[var(--text-muted)]">{completedIds.length} lessons completed</p>
           </Panel>
@@ -323,7 +307,7 @@ export function LocalLearningWorkspace() {
           <p className="mt-2 text-sm text-[var(--text-muted)]">Ask questions, solve maths and revise topics. This built-in engine works without an account, paid API or network request.</p>
           <div className="mt-4 flex flex-wrap gap-2">{MODES.map((mode) => <button key={mode.id} type="button" onClick={() => setAssistantMode(mode.id)} className={`btn btn-sm ${assistantMode === mode.id ? "btn-primary" : "btn-ghost"}`}>{mode.label}</button>)}</div>
           <form className="mt-4 flex flex-col gap-2 sm:flex-row" onSubmit={askAssistant}><input className="field flex-1" value={assistantInput} onChange={(event) => setAssistantInput(event.target.value)} maxLength={4000} placeholder="Ask Helix a question…" /><button type="submit" className="btn btn-primary btn-sm" disabled={assistantBusy || !assistantInput.trim()}>{assistantBusy ? "Thinking…" : "Ask Helix"}</button></form>
-          {assistantReply && <div className="mt-5 rounded-xl border border-[var(--panel-border)] p-4"><Markdown>{assistantReply}</Markdown></div>}
+          {assistantReply && <div className="mt-5 rounded-xl border border-[var(--panel-border)] p-4"><Markdown content={assistantReply} /></div>}
           <div className="mt-5 grid gap-2">{messages.slice(-8).map((message) => <div key={message.id} className={`rounded-xl p-3 text-sm ${message.role === "user" ? "ml-6 bg-violet-500/10" : "mr-6 bg-[var(--panel)]"}`}><p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">{message.role === "user" ? "You" : "Helix"}</p><div className="whitespace-pre-wrap">{message.content}</div></div>)}</div>
         </Panel>}
 
