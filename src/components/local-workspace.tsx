@@ -21,7 +21,7 @@ import {
   type LocalChatMessage,
   type LocalNote,
 } from "@/lib/learner-data";
-import { getAllDeviceRecords, putDeviceRecord } from "@/lib/device-store";
+import { getAllDeviceRecords, getDeviceRecord, putDeviceRecord } from "@/lib/device-store";
 import { DeviceBackupControls } from "./device-backup-controls";
 import { LocalBookmarkButton, LocalBookmarksPanel } from "./local-bookmarks";
 import { LocalAchievementsPanel } from "./local-achievements";
