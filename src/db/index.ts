@@ -6,6 +6,10 @@ const databaseUrl = process.env.DATABASE_URL;
 
 // Keep module initialization safe during Next.js build analysis. A real database
 // connection is still required when database-backed routes execute.
+if (!databaseUrl && process.env.NEXT_PHASE !== "phase-production-build") {
+  throw new Error("DATABASE_URL is required for HELIXEDU database features.");
+}
+
 const connectionString = databaseUrl ?? "postgresql://localhost:5432/helixedu_build";
 
 const globalForDb = globalThis as typeof globalThis & {
