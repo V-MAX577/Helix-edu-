@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { after, test } from "node:test";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "../../src/db/schema";
@@ -71,5 +71,7 @@ test("one learner cannot read, update, or delete another learner's notes", async
 
     assert.equal(bobNotes.length, 1);
     assert.equal(bobNotes[0].title, "Bob private note");
+
+    await tx.delete(schema.users).where(inArray(schema.users.id, [alice.id, bob.id]));
   });
 });
