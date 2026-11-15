@@ -86,6 +86,7 @@ export function openDeviceDatabase(): Promise<IDBDatabase> {
         reject(request.error ?? new Error("Could not open HELIXEDU device storage."));
       };
       request.onblocked = () => {
+        databasePromise = undefined;
         reject(new Error("Close other HELIXEDU tabs to finish updating device storage."));
       };
     });
