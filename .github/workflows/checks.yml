@@ -46,3 +46,13 @@ jobs:
       - name: Production build
         if: always()
         run: npm run build
+      - name: Install Chromium for browser tests
+        if: success()
+        run: npx playwright install --with-deps chromium
+      - name: Browser smoke tests
+        if: success()
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/helixedu_test
+          HELIXEDU_AI_ENABLED: "false"
+          CI: "true"
+        run: npm run test:e2e
