@@ -23,8 +23,8 @@ test("learning centre loads seeded subjects", async ({ page }) => {
 test("dashboard renders its main learning sections", async ({ page }) => {
   const response = await page.goto("/dashboard");
   expect(response?.ok()).toBeTruthy();
-  await expect(page.getByText("Continue Learning")).toBeVisible();
-  await expect(page.getByText("Quizzes and Tests")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Continue Learning" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Quizzes and Tests" })).toBeVisible();
 });
 
 test("assistant page opens without a provider configured", async ({ page }) => {
