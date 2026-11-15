@@ -36,10 +36,8 @@ export function PlanClient({ plan, todayIndex }: { plan: StudyPlan; todayIndex: 
     } catch {
       /* ignore */
     }
-    // Mark local storage hydration complete after the browser read.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoaded(true);
-  });
+  }, [storageKey]);
 
   function toggle(dayKey: string) {
     setDone((prev) => {

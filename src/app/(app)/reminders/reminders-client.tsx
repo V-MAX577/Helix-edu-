@@ -46,8 +46,6 @@ export function RemindersClient({
       setPermission("unsupported");
       return;
     }
-    // Browser permission is external state and must be read after hydration.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPermission(Notification.permission);
   }, []);
 

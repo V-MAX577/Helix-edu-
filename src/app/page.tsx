@@ -6,6 +6,8 @@ import { ensureSeeded } from "@/lib/progress";
 import { Logo, Wordmark } from "@/components/ui";
 import { LandingActions } from "./landing-actions";
 
+export const dynamic = "force-dynamic";
+
 const FEATURES = [
   {
     icon: "🧠",
