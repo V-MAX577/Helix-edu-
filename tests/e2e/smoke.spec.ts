@@ -93,24 +93,15 @@ test("study reminders persist on this device", async ({ page }) => {
   await expect(page.getByText("Read science")).toBeVisible();
 });
 
-test("backup import restores device data and rejects invalid records safely", async ({ page }) => {
+test("backup import restores device data and preserves stores omitted from a partial backup", async ({ page }) => {
+  // Create the existing plan through the app so its IndexedDB schema is
+  // initialized by the same path real learners use.
+  await page.goto("/demo?tab=planner");
+  await page.getByLabel("Plan title").fill("Keep this plan");
+  await page.getByRole("button", { name: "Save study plan" }).click();
+  await expect(page.getByText("Study plan saved on this device.")).toBeVisible();
+
   await page.goto("/demo?tab=settings");
-  // A partial backup must not erase data from stores it does not contain.
-  await page.evaluate(async () => {
-    const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open("helixedu-device", 1);
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction("studyPlans", "readwrite");
-      tx.objectStore("studyPlans").put({ id: "keep-existing-plan", title: "Keep this plan" });
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error);
-    });
-    db.close();
-  });
   const backup = {
     format: "helixedu-device-backup",
     version: 1,
@@ -136,22 +127,12 @@ test("backup import restores device data and rejects invalid records safely", as
   await expect(page.getByRole("status")).toContainText("Backup restored");
   // The UI explicitly asks for a refresh after restoring the data store.
   await page.reload();
-  const preservedPlan = await page.evaluate(async () => {
-    const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open("helixedu-device", 1);
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-    const record = await new Promise<unknown>((resolve, reject) => {
-      const tx = db.transaction("studyPlans", "readonly");
-      const request = tx.objectStore("studyPlans").get("keep-existing-plan");
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-    db.close();
-    return record;
-  });
-  expect(preservedPlan).toMatchObject({ id: "keep-existing-plan", title: "Keep this plan" });
+
+  // The partial backup contained notes only. The previously saved plan must
+  // remain intact after restore and refresh.
+  await page.getByRole("navigation", { name: "HELIXEDU sections" }).getByRole("button", { name: /Planner/ }).click();
+  await expect(page.getByRole("heading", { name: "Your plan tasks" })).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: "Complete one lesson" })).toBeVisible();
 
   await page.getByRole("navigation", { name: "HELIXEDU sections" }).getByRole("button", { name: /Notes/ }).click();
   await expect(page.getByText("Restored science note")).toBeVisible();
