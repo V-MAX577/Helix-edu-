@@ -30,7 +30,6 @@ export function LocalReminderPanel() {
     void getAllDeviceRecords<Reminder>("reminders").then((rows) => {
       if (!cancelled) setItems(rows.sort((a, b) => a.time.localeCompare(b.time)));
     }).catch(() => undefined);
-    if ("Notification" in window) setPermission(Notification.permission);
     return () => { cancelled = true; };
   }, []);
 
