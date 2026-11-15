@@ -95,6 +95,22 @@ test("study reminders persist on this device", async ({ page }) => {
 
 test("backup import restores device data and rejects invalid records safely", async ({ page }) => {
   await page.goto("/demo?tab=settings");
+  // A partial backup must not erase data from stores it does not contain.
+  await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open("helixedu-device", 1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction("studyPlans", "readwrite");
+      tx.objectStore("studyPlans").put({ id: "keep-existing-plan", title: "Keep this plan" });
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
+    });
+    db.close();
+  });
   const backup = {
     format: "helixedu-device-backup",
     version: 1,
@@ -118,6 +134,24 @@ test("backup import restores device data and rejects invalid records safely", as
     buffer: Buffer.from(JSON.stringify(backup)),
   });
   await expect(page.getByRole("status")).toContainText("Backup restored");
+  // The UI explicitly asks for a refresh after restoring the data store.
+  await page.reload();
+  const preservedPlan = await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open("helixedu-device", 1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const record = await new Promise<unknown>((resolve, reject) => {
+      const tx = db.transaction("studyPlans", "readonly");
+      const request = tx.objectStore("studyPlans").get("keep-existing-plan");
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    db.close();
+    return record;
+  });
+  expect(preservedPlan).toMatchObject({ id: "keep-existing-plan", title: "Keep this plan" });
 
   await page.getByRole("navigation", { name: "HELIXEDU sections" }).getByRole("button", { name: /Notes/ }).click();
   await expect(page.getByText("Restored science note")).toBeVisible();
