@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { getDeviceRecord, putDeviceRecord } from "@/lib/device-store";
+import { DeviceBackupControls } from "@/components/device-backup-controls";
 
 const subjects = [
   { icon: "📐", name: "Mathematics", detail: "Fractions, algebra and geometry", lessons: 12 },
@@ -26,28 +28,30 @@ export default function DemoPage() {
 
   // Restore this learner's demo progress from this browser on this device.
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("helixedu_demo_progress_v1");
-      if (saved) {
-        const data = JSON.parse(saved) as { tab?: string; answer?: number | null; showCard?: boolean; done?: boolean };
-        if (["overview", "lessons", "quiz", "flashcards"].includes(data.tab ?? "")) setTab(data.tab!);
-        if (data.answer === null || (typeof data.answer === "number" && data.answer >= 0 && data.answer < question.options.length)) setAnswer(data.answer);
-        if (typeof data.showCard === "boolean") setShowCard(data.showCard);
-        if (typeof data.done === "boolean") setDone(data.done);
+    let cancelled = false;
+    async function restore() {
+      try {
+        const saved = await getDeviceRecord<{ id: string; tab?: string; answer?: number | null; showCard?: boolean; done?: boolean }>("settings", "demo-progress");
+        if (saved && !cancelled) {
+          if (["overview", "lessons", "quiz", "flashcards"].includes(saved.tab ?? "")) setTab(saved.tab!);
+          if (saved.answer === null || (typeof saved.answer === "number" && saved.answer >= 0 && saved.answer < question.options.length)) setAnswer(saved.answer);
+          if (typeof saved.showCard === "boolean") setShowCard(saved.showCard);
+          if (typeof saved.done === "boolean") setDone(saved.done);
+        }
+      } catch {
+        // Keep the current session usable if device storage is unavailable.
       }
-    } catch {
-      // Ignore invalid or unavailable browser storage and keep the demo usable.
+      if (!cancelled) setStorageReady(true);
     }
-    setStorageReady(true);
+    void restore();
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
     if (!storageReady) return;
-    try {
-      localStorage.setItem("helixedu_demo_progress_v1", JSON.stringify({ tab, answer, showCard, done }));
-    } catch {
-      // Private browsing or a full device may block storage; the current session still works.
-    }
+    void putDeviceRecord("settings", { id: "demo-progress", tab, answer, showCard, done }).catch(() => {
+      // The current session remains usable if device storage is unavailable.
+    });
   }, [storageReady, tab, answer, showCard, done]);
 
   function resetDeviceProgress() {
@@ -151,6 +155,8 @@ export default function DemoPage() {
             <p className="mt-3 text-xs text-[var(--text-muted)]">Your flashcard state is saved locally in this browser.</p>
           </section>
         )}
+
+        <DeviceBackupControls />
 
         <footer className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--panel-border)] pt-5 text-xs text-[var(--text-muted)]">
           <span>HELIXEDU · Demo mode · Sample data only</span>
