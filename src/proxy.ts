@@ -1,30 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const DEVICE_COOKIE = "helixedu_device";
+const LEGACY_TABS: Record<string, string> = {
+  "/dashboard": "overview",
+  "/learn": "learn",
+  "/quizzes": "quiz",
+  "/flashcards": "cards",
+  "/assistant": "assistant",
+  "/achievements": "overview",
+  "/progress": "overview",
+  "/notes": "notes",
+  "/planner": "planner",
+  "/reminders": "planner",
+  "/bookmarks": "learn",
+  "/search": "learn",
+  "/settings": "settings",
+};
 
 export function proxy(request: NextRequest) {
-  let token = request.cookies.get(DEVICE_COOKIE)?.value;
-  const shouldSetCookie = !token || !/^[0-9a-f-]{36}$/i.test(token);
-
-  if (shouldSetCookie) {
-    token = crypto.randomUUID();
-    request.cookies.set(DEVICE_COOKIE, token);
+  const { pathname } = request.nextUrl;
+  const match = Object.entries(LEGACY_TABS).find(([path]) => pathname === path || pathname.startsWith(path + "/"));
+  if (match) {
+    const destination = request.nextUrl.clone();
+    destination.pathname = "/demo";
+    destination.search = "";
+    destination.searchParams.set("tab", match[1]);
+    return NextResponse.redirect(destination);
   }
-
-  const response = NextResponse.next({ request });
-  if (shouldSetCookie) {
-    response.cookies.set(DEVICE_COOKIE, token!, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 365,
-    });
-  }
-
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/).*)"],
 };
