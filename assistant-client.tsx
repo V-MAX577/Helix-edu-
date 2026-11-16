@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Markdown, Panel } from "./ui";
 import { deleteChatAction, newChatAction } from "@/app/actions";
+import { answerOfflineQuestion, type EngineLevel, type EngineMode } from "./offline-core";
 
 export type AssistantMessage = {
   id: string;
@@ -79,6 +80,41 @@ export function AssistantClient({
 
   const activeMode = useMemo(() => MODES.find((m) => m.id === mode) ?? MODES[0], [mode]);
 
+  function answerLocally(question: string) {
+    const safeMode: EngineMode = MODES.some((item) => item.id === mode)
+      ? (mode as EngineMode)
+      : "deep-think";
+    const safeLevel: EngineLevel =
+      level === "beginner" || level === "intermediate" || level === "advanced"
+        ? level
+        : "intermediate";
+    const history = messages
+      .filter((item) => item.role === "user" || item.role === "assistant")
+      .map((item) => ({
+        role: item.role as "user" | "assistant",
+        content: item.content,
+      }));
+    const reply = answerOfflineQuestion({
+      message: question,
+      mode: safeMode,
+      level: safeLevel,
+      className,
+      board,
+      history,
+    });
+    setProviderLabel("Helix Offline Engine");
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `local-${Date.now()}-a`,
+        role: "assistant",
+        content: reply.text,
+        provider: "helix-engine",
+        createdAt: new Date().toISOString(),
+      },
+    ]);
+  }
+
   async function send(text: string) {
     const question = text.trim();
     if (!question || loading) return;
@@ -91,6 +127,10 @@ export function AssistantClient({
     ]);
 
     try {
+      if (!navigator.onLine) {
+        answerLocally(question);
+        return;
+      }
       const res = await fetch("/api/assistant", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -98,6 +138,10 @@ export function AssistantClient({
       });
       const data = await res.json();
       if (!res.ok) {
+        if (res.status >= 500) {
+          answerLocally(question);
+          return;
+        }
         setError(data.error ?? "The assistant could not answer that.");
         setMessages((prev) => prev.slice(0, -1));
         return;
@@ -120,8 +164,8 @@ export function AssistantClient({
       if (data.providerError) setError(data.providerError);
       router.refresh();
     } catch {
-      setError("Network problem — the assistant could not be reached. Offline learning features still work.");
-      setMessages((prev) => prev.slice(0, -1));
+      // A failed network request should not disable the built-in learning brain.
+      answerLocally(question);
     } finally {
       setLoading(false);
     }
