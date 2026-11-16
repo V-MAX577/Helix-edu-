@@ -73,6 +73,7 @@ export function AssistantClient({
   const [providerLabel, setProviderLabel] = useState<string | null>(null);
   const [showSessions, setShowSessions] = useState(false);
   const [showProviders, setShowProviders] = useState(false);
+  const [offlineMode, setOfflineMode] = useState(true);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -82,38 +83,43 @@ export function AssistantClient({
   const activeMode = useMemo(() => MODES.find((m) => m.id === mode) ?? MODES[0], [mode]);
 
   function answerLocally(question: string) {
-    const safeMode: EngineMode = MODES.some((item) => item.id === mode)
-      ? (mode as EngineMode)
-      : "deep-think";
-    const safeLevel: EngineLevel =
-      level === "beginner" || level === "intermediate" || level === "advanced"
-        ? level
-        : "intermediate";
-    const history = messages
-      .filter((item) => item.role === "user" || item.role === "assistant")
-      .map((item) => ({
-        role: item.role as "user" | "assistant",
-        content: item.content,
-      }));
-    const reply = answerOfflineQuestion({
-      message: question,
-      mode: safeMode,
-      level: safeLevel,
-      className,
-      board,
-      history,
-    });
-    setProviderLabel("Helix Offline Engine");
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: `local-${Date.now()}-a`,
-        role: "assistant",
-        content: reply.text,
-        provider: "helix-engine",
-        createdAt: new Date().toISOString(),
-      },
-    ]);
+    try {
+      const safeMode: EngineMode = MODES.some((item) => item.id === mode)
+        ? (mode as EngineMode)
+        : "deep-think";
+      const safeLevel: EngineLevel =
+        level === "beginner" || level === "intermediate" || level === "advanced"
+          ? level
+          : "intermediate";
+      const history = messages
+        .filter((item) => item.role === "user" || item.role === "assistant")
+        .map((item) => ({
+          role: item.role as "user" | "assistant",
+          content: item.content,
+        }));
+      const reply = answerOfflineQuestion({
+        message: question,
+        mode: safeMode,
+        level: safeLevel,
+        className,
+        board,
+        history,
+      });
+      setProviderLabel("Helix Offline Engine");
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `local-${Date.now()}-a`,
+          role: "assistant",
+          content: reply.text,
+          provider: "helix-engine",
+          createdAt: new Date().toISOString(),
+        },
+      ]);
+    } catch {
+      setError("The offline engine could not verify that request. Try a supported topic or calculation.");
+      setMessages((prev) => prev.slice(0, -1));
+    }
   }
 
   async function send(text: string) {
@@ -128,7 +134,7 @@ export function AssistantClient({
     ]);
 
     try {
-      if (!navigator.onLine) {
+      if (offlineMode || !navigator.onLine) {
         answerLocally(question);
         return;
       }
@@ -304,9 +310,18 @@ export function AssistantClient({
                 {activeMode.hint}
               </p>
             </div>
-            <span className="chip chip-cyan">
-              {providerLabel ?? "Helix Offline Engine"}
-            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="chip chip-cyan"
+                aria-pressed={offlineMode}
+                onClick={() => setOfflineMode((value) => !value)}
+                title="Local Brain mode answers from the built-in offline engine without calling an AI provider."
+              >
+                {offlineMode ? "🧠 Local Brain · API off" : "☁️ Online AI"}
+              </button>
+              <span className="chip">{providerLabel ?? (offlineMode ? "Helix Offline Engine" : "Provider not selected")}</span>
+            </div>
           </div>
         </Panel>
 
