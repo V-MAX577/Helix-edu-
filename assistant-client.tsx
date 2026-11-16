@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Markdown, Panel } from "./ui";
 import { deleteChatAction, newChatAction } from "@/app/actions";
-import { answerOfflineQuestion, type EngineLevel, type EngineMode } from "./offline-core";
+import { answerOfflineQuestion } from "./offline-core";
+import type { EngineLevel, EngineMode } from "./engine";
 
 export type AssistantMessage = {
   id: string;
