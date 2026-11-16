@@ -23,6 +23,7 @@ try {
   for (const name of ["math", "knowledge", "engine"]) compile(name);
 
   const math = require(path.join(temp, "math.js"));
+  const knowledge = require(path.join(temp, "knowledge.js"));
   const engine = require(path.join(temp, "engine.js"));
   const input = (message) => ({
     message,
