@@ -40,6 +40,8 @@ try {
   assert.throws(() => math.trySolveMath("1 kg to m"), math.MathError);
   assert.throws(() => math.trySolveMath("y + 2 = 5"), math.MathError);
   assert.equal(math.trySolveMath("lcm of 0 and 0"), null);
+  assert.equal(math.trySolveMath("gcd of 0 and 0"), null);
+  assert.equal(math.trySolveMath("1.2.3 + 1"), null);
   assert.equal(math.trySolveMath("prime factors of 1"), null);
 
   assert.ok(knowledge.searchTopics("explain photosynthesis in simple words").length > 0);
