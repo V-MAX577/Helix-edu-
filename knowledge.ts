@@ -1261,7 +1261,7 @@ export const KNOWLEDGE_BY_SUBJECT = KNOWLEDGE.reduce<Record<string, KnowledgeTop
 const STOP_WORDS = new Set([
   "the", "a", "an", "is", "are", "was", "were", "of", "to", "in", "on", "for", "and", "or", "please",
   "can", "you", "me", "my", "i", "it", "this", "that", "what", "explain", "tell", "about", "how", "why",
-  "do", "does", "help", "with", "give", "some", "teach", "learn", "study", "define", "meaning",
+  "do", "does", "help", "with", "give", "some", "teach", "learn", "study", "define", "meaning", "simple", "words", "briefly", "detail", "detailed", "example", "examples", "lesson", "topic", "process", "work", "works",
 ]);
 
 function tokenize(text: string): string[] {
@@ -1284,15 +1284,24 @@ export function searchTopics(query: string): { topic: KnowledgeTopic; score: num
       topic.id,
       ...topic.keywords,
       topic.simple,
+      ...topic.deep,
       ...topic.keyPoints,
+      topic.example,
+      topic.story ?? "",
     ]
       .join(" ")
       .toLowerCase();
+
+    // Never answer from a partial keyword match. Every meaningful query word
+    // must be supported by this topic's curated content.
+    const matchedWords = words.filter((word) => haystack.includes(word));
+    if (matchedWords.length !== words.length) continue;
+
     for (const word of words) {
       if (title.includes(word)) score += 6;
       if (topic.keywords.some((k) => k.includes(word))) score += 5;
       if (topic.id.includes(word)) score += 4;
-      if (haystack.includes(word)) score += 1;
+      score += 1;
     }
     if (score > 0) scored.push({ topic, score });
   }
