@@ -1288,19 +1288,21 @@ export function searchTopics(query: string): { topic: KnowledgeTopic; score: num
       ...topic.keyPoints,
       topic.example,
       topic.story ?? "",
-    ]
-      .join(" ")
-      .toLowerCase();
+    ].join(" ");
+    const haystackWords = new Set(tokenize(haystack));
+    const titleWords = new Set(tokenize(topic.title));
+    const keywordWords = new Set(topic.keywords.flatMap(tokenize));
+    const idWords = new Set(tokenize(topic.id));
 
     // Never answer from a partial keyword match. Every meaningful query word
-    // must be supported by this topic's curated content.
-    const matchedWords = words.filter((word) => haystack.includes(word));
+    // must be supported by this topic's curated content as a whole word.
+    const matchedWords = words.filter((word) => haystackWords.has(word));
     if (matchedWords.length !== words.length) continue;
 
     for (const word of words) {
-      if (title.includes(word)) score += 6;
-      if (topic.keywords.some((k) => k.includes(word))) score += 5;
-      if (topic.id.includes(word)) score += 4;
+      if (titleWords.has(word)) score += 6;
+      if (keywordWords.has(word)) score += 5;
+      if (idWords.has(word)) score += 4;
       score += 1;
     }
     if (score > 0) scored.push({ topic, score });
