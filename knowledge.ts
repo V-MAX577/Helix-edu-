@@ -1278,7 +1278,6 @@ export function searchTopics(query: string): { topic: KnowledgeTopic; score: num
   const scored: { topic: KnowledgeTopic; score: number }[] = [];
   for (const topic of KNOWLEDGE) {
     let score = 0;
-    const title = topic.title.toLowerCase();
     const haystack = [
       topic.title,
       topic.id,
