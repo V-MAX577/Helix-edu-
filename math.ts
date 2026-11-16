@@ -452,7 +452,7 @@ export function percentProblem(text: string): Solution | null {
         `Percentage = Part ÷ Whole × 100`,
         `= ${fmt(part)} ÷ ${fmt(whole)} × 100 = ${fmt(percentage)}%`,
       ],
-      answer: `${fmt(part)} is ${fmt((part / whole) * 100)}% of ${fmt(whole)}`,
+      answer: `${fmt(part)} is ${fmt(percentage)}% of ${fmt(whole)}`,
     };
   }
   return null;
@@ -461,7 +461,8 @@ export function percentProblem(text: string): Solution | null {
 export function numberTheoryProblem(text: string): Solution | null {
   const t = text.toLowerCase();
   const m = t.match(/(\d+)\s*(?:,|\s|and)\s*(\d+)/);
-  if (/\b(gcd|hcf|greatest common)\b/.test(t) && m) {
+  const numberCount = [...t.matchAll(/\d+/g)].length;
+  if (/\b(gcd|hcf|greatest common)\b/.test(t) && m && numberCount === 2) {
     const a = Number(m[1]);
     const b = Number(m[2]);
     if (!isReliableNumber(a) || !isReliableNumber(b) || (a === 0 && b === 0)) return null;
@@ -475,7 +476,7 @@ export function numberTheoryProblem(text: string): Solution | null {
     steps.push(`When the remainder becomes 0, the divisor (${x}) is the GCD.`);
     return { kind: "gcd", steps, answer: `GCD(${a}, ${b}) = ${x}` };
   }
-  if (/\b(lcm|least common multiple)\b/.test(t) && m) {
+  if (/\b(lcm|least common multiple)\b/.test(t) && m && numberCount === 2) {
     const a = Number(m[1]);
     const b = Number(m[2]);
     if (!isReliableNumber(a) || !isReliableNumber(b)) return null;
@@ -487,8 +488,8 @@ export function numberTheoryProblem(text: string): Solution | null {
       kind: "lcm",
       steps: [
         `GCD(${a}, ${b}) = ${gcd}`,
-        `LCM = (a × b) ÷ GCD = (${a} × ${b}) ÷ ${gcd}`,
-        `= ${a * b} ÷ ${gcd} = ${lcm}`,
+        `LCM = (a ÷ GCD) × b = (${a} ÷ ${gcd}) × ${b}`,
+        `= ${lcm}`,
       ],
       answer: `LCM(${a}, ${b}) = ${lcm}`,
     };
@@ -533,7 +534,7 @@ export function gcdOf(a: number, b: number): number {
 
 export function averageProblem(text: string): Solution | null {
   const t = text.toLowerCase();
-  if (!/\b(average|mean|arithmetic mean)\b/.test(t)) return null;
+  if (!/\b(?:average|mean|arithmetic mean)\s+of\b/.test(t)) return null;
   const nums = [...t.matchAll(/-?\d+(?:\.\d+)?/g)].map((m) => Number(m[0]));
   if (nums.length < 2 || nums.some((n) => !isReliableNumber(n))) return null;
   const sum = nums.reduce((a, b) => a + b, 0);
