@@ -370,7 +370,7 @@ export function evaluateExpression(src: string): Solution {
 
 export function percentProblem(text: string): Solution | null {
   const t = text.toLowerCase().replace(/,/g, "");
-  let m = t.match(/([\d.]+)\s*(?:%|percent)\s*of\s*([\d.]+)/);
+  let m = t.match(/(\d+(?:\.\d+)?)\s*(?:%|percent)\s*of\s*(\d+(?:\.\d+)?)/);
   if (m) {
     const pct = Number(m[1]);
     const base = Number(m[2]);
@@ -385,9 +385,9 @@ export function percentProblem(text: string): Solution | null {
       answer: `${fmt(pct)}% of ${fmt(base)} is ${fmt(value)}`,
     };
   }
-  m = t.match(/what\s*(?:is\s*)?([\d.]+)\s*(?:%|percent)\s*of\s*([\d.]+)/);
+  m = t.match(/what\s*(?:is\s*)?(\d+(?:\.\d+)?)\s*(?:%|percent)\s*of\s*(\d+(?:\.\d+)?)/);
   if (m) return percentProblem(`${m[1]}% of ${m[2]}`);
-  m = t.match(/(?:increase|raise)\s*([\d.]+)\s*by\s*([\d.]+)\s*(?:%|percent)/);
+  m = t.match(/(?:increase|raise)\s*(\d+(?:\.\d+)?)\s*by\s*(\d+(?:\.\d+)?)\s*(?:%|percent)/);
   if (m) {
     const base = Number(m[1]);
     const pct = Number(m[2]);
@@ -402,7 +402,7 @@ export function percentProblem(text: string): Solution | null {
       answer: `${fmt(base)} increased by ${fmt(pct)}% is ${fmt(base + delta)}`,
     };
   }
-  m = t.match(/(?:decrease|reduce|discount\s*of)\s*([\d.]+)\s*by\s*([\d.]+)\s*(?:%|percent)/);
+  m = t.match(/(?:decrease|reduce|discount\s*of)\s*(\d+(?:\.\d+)?)\s*by\s*(\d+(?:\.\d+)?)\s*(?:%|percent)/);
   if (m) {
     const base = Number(m[1]);
     const pct = Number(m[2]);
@@ -417,7 +417,7 @@ export function percentProblem(text: string): Solution | null {
       answer: `${fmt(base)} decreased by ${fmt(pct)}% is ${fmt(base - delta)}`,
     };
   }
-  m = t.match(/([\d.]+)\s*(?:is\s*)?what\s*(?:%|percent)\s*of\s*([\d.]+)/);
+  m = t.match(/(\d+(?:\.\d+)?)\s*(?:is\s*)?what\s*(?:%|percent)\s*of\s*(\d+(?:\.\d+)?)/);
   if (m) {
     const part = Number(m[1]);
     const whole = Number(m[2]);
@@ -538,7 +538,7 @@ const UNITS: Record<string, { factor: number; dimension: "length" | "mass" | "vo
 export function unitProblem(text: string): Solution | null {
   const m = text
     .toLowerCase()
-    .match(/([\d.]+)\s*(km|m|cm|mm|kg|g|mg|l|ml)\s*(?:to|in|into)\s*(km|m|cm|mm|kg|g|mg|l|ml)/);
+    .match(/(\d+(?:\.\d+)?)\s*(km|m|cm|mm|kg|g|mg|l|ml)\s*(?:to|in|into)\s*(km|m|cm|mm|kg|g|mg|l|ml)/);
   if (!m) return null;
   const value = Number(m[1]);
   const from = m[2];
