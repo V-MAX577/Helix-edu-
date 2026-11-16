@@ -23,7 +23,6 @@ try {
   for (const name of ["math", "knowledge", "engine"]) compile(name);
 
   const math = require(path.join(temp, "math.js"));
-  const knowledge = require(path.join(temp, "knowledge.js"));
   const engine = require(path.join(temp, "engine.js"));
   const input = (message) => ({
     message,
@@ -47,7 +46,7 @@ try {
   assert.equal(engine.runEngine(input("capital of France")).kind, "fallback");
   assert.equal(engine.runEngine(input("photosynthesis")).kind, "topic");
 
-  process.stdout.write("HELIXEDU offline engine smoke tests passed.\\n");
+  process.stdout.write("HELIXEDU offline engine smoke tests passed.\n");
 } finally {
   fs.rmSync(temp, { recursive: true, force: true });
 }
