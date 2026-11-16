@@ -441,6 +441,7 @@ export function numberTheoryProblem(text: string): Solution | null {
   if (/\b(gcd|hcf|greatest common)\b/.test(t) && m) {
     const a = Number(m[1]);
     const b = Number(m[2]);
+    if (a === 0 && b === 0) return null;
     const steps: string[] = [`Finding GCD (HCF) of ${a} and ${b} using Euclid's algorithm:`];
     let x = a;
     let y = b;
