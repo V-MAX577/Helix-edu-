@@ -9,7 +9,7 @@
 
 export type Poly = Map<number, number>;
 
-const VARIABLES = ["x", "y", "z", "t", "n", "a", "b"];
+const VARIABLES = ["x"];
 
 export class MathError extends Error {}
 
@@ -50,7 +50,7 @@ function tokenize(src: string): Tok[] {
       if (word === "sqrt") out.push({ t: "fn", v: "sqrt" });
       else if (word === "pi") out.push({ t: "num", v: Math.PI });
       else if (VARIABLES.includes(word)) out.push({ t: "var", v: word });
-      else throw new MathError(`Unknown symbol "${word}". Try x, y or a number.`);
+      else throw new MathError(`Unknown symbol "${word}". This solver currently supports x as its variable.`);
       i = j;
       continue;
     }
@@ -85,7 +85,7 @@ function polyFromNumber(n: number): Poly {
   return p;
 }
 
-function polyFromVar(v: string): Poly {
+function polyFromVar(_v: string): Poly {
   const p: Poly = new Map();
   p.set(1, 1);
   return p;
@@ -126,7 +126,8 @@ function div(a: Poly, b: Poly): Poly {
 }
 
 function pow(a: Poly, n: number): Poly {
-  if (!Number.isInteger(n) || n < 0) throw new MathError("Only whole-number powers are supported.");
+  if (!Number.isInteger(n) || n < 0) throw new MathError("Only non-negative whole-number powers are supported.");
+  if (n > 12) throw new MathError("Powers above 12 are not supported by the offline solver yet.");
   let r: Poly = polyFromNumber(1);
   for (let i = 0; i < n; i++) r = mul(r, a);
   return r;
@@ -454,6 +455,7 @@ export function numberTheoryProblem(text: string): Solution | null {
     const a = Number(m[1]);
     const b = Number(m[2]);
     const gcd = gcdOf(a, b);
+    if (gcd === 0) return null;
     const lcm = Math.abs(a * b) / gcd;
     return {
       kind: "lcm",
@@ -468,6 +470,7 @@ export function numberTheoryProblem(text: string): Solution | null {
   const pm = t.match(/prime\s*(?:factors?|factorization)\s*(?:of)?\s*(\d+)/);
   if (pm) {
     const n = Number(pm[1]);
+    if (n < 2) return null;
     const factors: number[] = [];
     let d = 2;
     let cur = n;
@@ -520,16 +523,16 @@ export function averageProblem(text: string): Solution | null {
   };
 }
 
-const UNITS: Record<string, number> = {
-  km: 1000,
-  m: 1,
-  cm: 0.01,
-  mm: 0.001,
-  kg: 1000,
-  g: 1,
-  mg: 0.001,
-  l: 1,
-  ml: 0.001,
+const UNITS: Record<string, { factor: number; dimension: "length" | "mass" | "volume" }> = {
+  km: { factor: 1000, dimension: "length" },
+  m: { factor: 1, dimension: "length" },
+  cm: { factor: 0.01, dimension: "length" },
+  mm: { factor: 0.001, dimension: "length" },
+  kg: { factor: 1000, dimension: "mass" },
+  g: { factor: 1, dimension: "mass" },
+  mg: { factor: 0.001, dimension: "mass" },
+  l: { factor: 1, dimension: "volume" },
+  ml: { factor: 0.001, dimension: "volume" },
 };
 
 export function unitProblem(text: string): Solution | null {
@@ -540,15 +543,18 @@ export function unitProblem(text: string): Solution | null {
   const value = Number(m[1]);
   const from = m[2];
   const to = m[3];
-  const fromBase = value * UNITS[from];
-  const result = fromBase / UNITS[to];
+  if (UNITS[from].dimension !== UNITS[to].dimension) {
+    throw new MathError("Those units measure different quantities. Convert length to length, mass to mass, or volume to volume.");
+  }
+  const fromBase = value * UNITS[from].factor;
+  const result = fromBase / UNITS[to].factor;
   return {
     kind: "unit-conversion",
     steps: [
-      `${value} ${from} → base unit: ${value} × ${UNITS[from]} = ${fromBase}`,
-      `Base unit → ${to}: ${fromBase} ÷ ${UNITS[to]} = ${fmt(result)}`,
+      \`${value} ${from} → base unit: ${value} × ${UNITS[from].factor} = ${fromBase}\`,
+      \`Base unit → ${to}: ${fromBase} ÷ ${UNITS[to].factor} = ${fmt(result)}\`,
     ],
-    answer: `${value} ${from} = ${fmt(result)} ${to}`,
+    answer: \`${value} ${from} = ${fmt(result)} ${to}\`,
   };
 }
 
