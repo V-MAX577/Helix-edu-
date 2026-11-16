@@ -580,10 +580,10 @@ export function unitProblem(text: string): Solution | null {
   return {
     kind: "unit-conversion",
     steps: [
-      \`${value} ${from} → base unit: ${value} × ${UNITS[from].factor} = ${fromBase}\`,
-      \`Base unit → ${to}: ${fromBase} ÷ ${UNITS[to].factor} = ${fmt(result)}\`,
+      `${value} ${from} → base unit: ${value} × ${UNITS[from].factor} = ${fromBase}`,
+      `Base unit → ${to}: ${fromBase} ÷ ${UNITS[to].factor} = ${fmt(result)}`,
     ],
-    answer: \`${value} ${from} = ${fmt(result)} ${to}\`,
+    answer: `${value} ${from} = ${fmt(result)} ${to}`,
   };
 }
 
