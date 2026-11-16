@@ -13,6 +13,10 @@ const VARIABLES = ["x"];
 
 export class MathError extends Error {}
 
+function isReliableNumber(value: number): boolean {
+  return Number.isFinite(value) && (!Number.isInteger(value) || Number.isSafeInteger(value));
+}
+
 /* ----------------------------- tokenizer ---------------------------- */
 
 type Tok =
@@ -80,6 +84,9 @@ function tokenize(src: string): Tok[] {
 /* --------------------------- polynomial ops -------------------------- */
 
 function polyFromNumber(n: number): Poly {
+  if (!isReliableNumber(n)) {
+    throw new MathError("That number is outside the safe range for a reliable offline calculation.");
+  }
   const p: Poly = new Map();
   if (n !== 0) p.set(0, n);
   return p;
@@ -92,7 +99,12 @@ function polyFromVar(_v: string): Poly {
 }
 
 function trim(p: Poly): Poly {
-  for (const [k, v] of [...p]) if (Math.abs(v) < 1e-12) p.delete(k);
+  for (const [k, v] of [...p]) {
+    if (!isReliableNumber(v)) {
+      throw new MathError("That result is outside the safe range for a reliable offline calculation.");
+    }
+    if (Math.abs(v) < 1e-12) p.delete(k);
+  }
   return p;
 }
 
@@ -278,6 +290,9 @@ export type Solution = {
 };
 
 function fmt(n: number): string {
+  if (!isReliableNumber(n)) {
+    throw new MathError("That result is outside the safe range for a reliable offline calculation.");
+  }
   if (Number.isInteger(n)) return String(n);
   return String(Math.round(n * 1e6) / 1e6);
 }
@@ -374,7 +389,9 @@ export function percentProblem(text: string): Solution | null {
   if (m) {
     const pct = Number(m[1]);
     const base = Number(m[2]);
+    if (!isReliableNumber(pct) || !isReliableNumber(base)) return null;
     const value = (pct / 100) * base;
+    if (!isReliableNumber(value)) return null;
     return {
       kind: "percentage",
       steps: [
@@ -391,7 +408,9 @@ export function percentProblem(text: string): Solution | null {
   if (m) {
     const base = Number(m[1]);
     const pct = Number(m[2]);
+    if (!isReliableNumber(base) || !isReliableNumber(pct)) return null;
     const delta = (pct / 100) * base;
+    if (!isReliableNumber(delta) || !isReliableNumber(base + delta)) return null;
     return {
       kind: "percentage",
       steps: [
@@ -406,7 +425,9 @@ export function percentProblem(text: string): Solution | null {
   if (m) {
     const base = Number(m[1]);
     const pct = Number(m[2]);
+    if (!isReliableNumber(base) || !isReliableNumber(pct)) return null;
     const delta = (pct / 100) * base;
+    if (!isReliableNumber(delta) || !isReliableNumber(base - delta)) return null;
     return {
       kind: "percentage",
       steps: [
@@ -421,13 +442,15 @@ export function percentProblem(text: string): Solution | null {
   if (m) {
     const part = Number(m[1]);
     const whole = Number(m[2]);
-    if (whole === 0) return null;
+    if (!isReliableNumber(part) || !isReliableNumber(whole) || whole === 0) return null;
+    const percentage = (part / whole) * 100;
+    if (!isReliableNumber(percentage)) return null;
     return {
       kind: "percentage",
       steps: [
         `Part = ${fmt(part)}, Whole = ${fmt(whole)}`,
         `Percentage = Part ÷ Whole × 100`,
-        `= ${fmt(part)} ÷ ${fmt(whole)} × 100 = ${fmt((part / whole) * 100)}%`,
+        `= ${fmt(part)} ÷ ${fmt(whole)} × 100 = ${fmt(percentage)}%`,
       ],
       answer: `${fmt(part)} is ${fmt((part / whole) * 100)}% of ${fmt(whole)}`,
     };
@@ -441,7 +464,7 @@ export function numberTheoryProblem(text: string): Solution | null {
   if (/\b(gcd|hcf|greatest common)\b/.test(t) && m) {
     const a = Number(m[1]);
     const b = Number(m[2]);
-    if (a === 0 && b === 0) return null;
+    if (!isReliableNumber(a) || !isReliableNumber(b) || (a === 0 && b === 0)) return null;
     const steps: string[] = [`Finding GCD (HCF) of ${a} and ${b} using Euclid's algorithm:`];
     let x = a;
     let y = b;
@@ -455,9 +478,11 @@ export function numberTheoryProblem(text: string): Solution | null {
   if (/\b(lcm|least common multiple)\b/.test(t) && m) {
     const a = Number(m[1]);
     const b = Number(m[2]);
+    if (!isReliableNumber(a) || !isReliableNumber(b)) return null;
     const gcd = gcdOf(a, b);
     if (gcd === 0) return null;
-    const lcm = Math.abs(a * b) / gcd;
+    const lcm = Math.abs((a / gcd) * b);
+    if (!isReliableNumber(lcm)) return null;
     return {
       kind: "lcm",
       steps: [
@@ -471,7 +496,7 @@ export function numberTheoryProblem(text: string): Solution | null {
   const pm = t.match(/prime\s*(?:factors?|factorization)\s*(?:of)?\s*(\d+)/);
   if (pm) {
     const n = Number(pm[1]);
-    if (n < 2) return null;
+    if (!Number.isSafeInteger(n) || n < 2 || n > 1_000_000_000) return null;
     const factors: number[] = [];
     let d = 2;
     let cur = n;
@@ -510,8 +535,9 @@ export function averageProblem(text: string): Solution | null {
   const t = text.toLowerCase();
   if (!/\b(average|mean|arithmetic mean)\b/.test(t)) return null;
   const nums = [...t.matchAll(/-?\d+(?:\.\d+)?/g)].map((m) => Number(m[0]));
-  if (nums.length < 2) return null;
+  if (nums.length < 2 || nums.some((n) => !isReliableNumber(n))) return null;
   const sum = nums.reduce((a, b) => a + b, 0);
+  if (!isReliableNumber(sum) || !isReliableNumber(sum / nums.length)) return null;
   return {
     kind: "average",
     steps: [
@@ -542,6 +568,7 @@ export function unitProblem(text: string): Solution | null {
     .match(/(\d+(?:\.\d+)?)\s*(km|m|cm|mm|kg|g|mg|l|ml)\s*(?:to|in|into)\s*(km|m|cm|mm|kg|g|mg|l|ml)/);
   if (!m) return null;
   const value = Number(m[1]);
+  if (!isReliableNumber(value)) return null;
   const from = m[2];
   const to = m[3];
   if (UNITS[from].dimension !== UNITS[to].dimension) {
@@ -549,6 +576,7 @@ export function unitProblem(text: string): Solution | null {
   }
   const fromBase = value * UNITS[from].factor;
   const result = fromBase / UNITS[to].factor;
+  if (!isReliableNumber(fromBase) || !isReliableNumber(result)) return null;
   return {
     kind: "unit-conversion",
     steps: [
