@@ -383,7 +383,8 @@ export function runEngine(input: EngineInput): EngineReply {
   if (hits.length) {
     const best = hits[0];
     // A weak match only counts if the query is clearly about a topic.
-    if (hits.length === 1 || best.score >= 6) {
+    const unambiguous = hits.length === 1 || best.score - hits[1].score >= 3;
+    if (best.score >= 6 && unambiguous) {
       return {
         kind: "topic",
         subject: best.topic.subject,
